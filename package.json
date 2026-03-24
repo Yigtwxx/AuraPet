@@ -1,0 +1,28 @@
+{
+  "name": "aurapet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yigtwxx/AuraPet.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Yigtwxx/AuraPet/issues"
+  },
+  "homepage": "https://github.com/Yigtwxx/AuraPet#readme",
+  "dependencies": {
+    "@huggingface/inference": "^4.13.15",
+    "apollo-server": "^3.13.0",
+    "dotenv": "^17.3.1",
+    "graphql": "^16.13.1",
+    "mongoose": "^9.2.4"
+  }
+}
