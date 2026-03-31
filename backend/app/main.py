@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router as api_router
 from app.core.config import settings
 from app.db.mongo import mongo
+from app.services.ai import sentiment_service
 
 logging.basicConfig(
     level=logging.DEBUG if settings.debug else logging.INFO,
@@ -17,6 +18,7 @@ logging.basicConfig(
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await mongo.connect()
+    sentiment_service.load()
     try:
         yield
     finally:
