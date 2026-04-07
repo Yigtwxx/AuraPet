@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router as api_router
 from app.core.config import settings
 from app.db.mongo import mongo
+from app.graphql import graphql_router
 from app.services.ai import sentiment_service
 
 logging.basicConfig(
@@ -36,3 +37,4 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix="/api")
+app.include_router(graphql_router, prefix="/graphql")
