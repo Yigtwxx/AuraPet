@@ -6,7 +6,12 @@ class Settings(BaseSettings):
     debug: bool = False
     mongo_uri: str = "mongodb://localhost:27017"
     mongo_db_name: str = "aurapet"
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "capacitor://localhost",
+        "http://localhost",
+    ]
 
     model_config = SettingsConfigDict(
         env_file=".env",
