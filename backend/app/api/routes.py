@@ -49,7 +49,7 @@ async def health() -> HealthResponse:
 
     if sentiment_service.is_loaded:
         model_status = "loaded"
-    elif sentiment_service._load_error:
+    elif sentiment_service.load_error:
         model_status = "error"
     else:
         model_status = "not_loaded"
