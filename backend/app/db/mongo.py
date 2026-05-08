@@ -1,15 +1,19 @@
 import logging
+from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from app.core.config import settings
 
+_ASC = 1
+_DESC = -1
+
 logger = logging.getLogger(__name__)
 
 
 class Mongo:
-    _client: AsyncIOMotorClient | None = None
-    _db: AsyncIOMotorDatabase | None = None
+    _client: Optional[AsyncIOMotorClient] = None
+    _db: Optional[AsyncIOMotorDatabase] = None
 
     @property
     def db(self) -> AsyncIOMotorDatabase:
@@ -22,6 +26,17 @@ class Mongo:
         await self._client.admin.command("ping")
         self._db = self._client[settings.mongo_db_name]
         logger.info("Connected to MongoDB at %s", settings.mongo_uri)
+        await self._ensure_indexes()
+
+    async def _ensure_indexes(self) -> None:
+        db = self._db
+        await db["users"].create_index([("username", _ASC)], unique=True, background=True)
+        await db["users"].create_index([("email", _ASC)], background=True)
+        await db["pets"].create_index([("user_id", _ASC)], background=True)
+        await db["logs"].create_index(
+            [("user_id", _ASC), ("created_at", _DESC)], background=True
+        )
+        logger.info("MongoDB indexes ensured.")
 
     async def disconnect(self) -> None:
         if self._client is not None:
