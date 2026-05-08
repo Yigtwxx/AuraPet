@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 import strawberry
 from bson import ObjectId
@@ -10,7 +10,7 @@ from app.db.mongo import mongo
 from app.graphql.schema import Log, Pet, User
 from app.models import bson_to_str
 from app.models.pet import PetDocument
-from app.services.ai import sentiment_service
+from app.services.ai import MOOD_COLORS, sentiment_service
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class Mutation:
         doc = {
             "username": username,
             "email": email,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         result = await mongo.db["users"].insert_one(doc)
         logger.info("New user created: id=%s username=%s", result.inserted_id, username)
@@ -88,7 +88,7 @@ class Mutation:
             "level": 1,
             "xp": 0,
             "current_mood": "NEUTRAL",
-            "color_theme": "#95A5A6",
+            "color_theme": MOOD_COLORS["NEUTRAL"],
         }
         result = await mongo.db["pets"].insert_one(doc)
         logger.info("New pet created: id=%s name=%s user_id=%s", result.inserted_id, name, user_id)
@@ -99,7 +99,7 @@ class Mutation:
             level=1,
             xp=0,
             current_mood="NEUTRAL",
-            color_theme="#95A5A6",
+            color_theme=MOOD_COLORS["NEUTRAL"],
         )
 
     @strawberry.mutation(
@@ -132,17 +132,24 @@ class Mutation:
             "user_id": str(user_id),
             "entry_text": entry_text,
             "sentiment_score": result.score,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         await mongo.db["logs"].insert_one(log_doc)
 
-        # 3. Kullanıcının petini bul (MVP: ilk pet)
+        # 3. Kullanıcının petini bul (MVP: ilk pet); yoksa otomatik oluştur
         pet_raw = await mongo.db["pets"].find_one({"user_id": str(user_id)})
         if pet_raw is None:
-            raise ValueError(
-                f"Kullanıcı (id={user_id}) için kayıtlı pet bulunamadı. "
-                "Önce createPet mutation'ını çağırın."
-            )
+            logger.info("No pet found for user=%s — auto-creating 'Aura'", user_id)
+            auto_doc = {
+                "user_id": str(user_id),
+                "name": "Aura",
+                "level": 1,
+                "xp": 0,
+                "current_mood": "NEUTRAL",
+                "color_theme": MOOD_COLORS["NEUTRAL"],
+            }
+            insert_result = await mongo.db["pets"].insert_one(auto_doc)
+            pet_raw = await mongo.db["pets"].find_one({"_id": insert_result.inserted_id})
         pet = PetDocument.model_validate(bson_to_str(pet_raw))
 
         # 4. XP ve seviye hesapla
@@ -157,8 +164,13 @@ class Mutation:
         )
 
         # 5. Peti güncelle
+        try:
+            pet_oid = ObjectId(pet.id)
+        except Exception:
+            raise ValueError(f"Geçersiz pet kimliği: {pet.id}")
+
         await mongo.db["pets"].update_one(
-            {"_id": ObjectId(pet.id)},
+            {"_id": pet_oid},
             {
                 "$set": {
                     "xp": new_xp,
