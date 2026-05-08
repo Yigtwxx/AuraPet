@@ -74,3 +74,6 @@ mobile-ios/**/*.dSYM.zip
 
 # ──────────────── HuggingFace cache ────────────────
 **/transformers_cache/
+
+# ──────────────── Sunum dokümanları (özel) ────────────────
+shared-docs/
