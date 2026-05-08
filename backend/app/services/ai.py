@@ -9,6 +9,14 @@ logger = logging.getLogger(__name__)
 
 MODEL_ID = "saribasmetehan/bert-base-turkish-sentiment-analysis"
 
+# Canonical mood→color mapping — single source of truth for backend and models
+MOOD_COLORS: dict[str, str] = {
+    "HAPPY":   "#FFD700",
+    "NEUTRAL": "#95A5A6",
+    "SAD":     "#5B9BD5",
+    "ANXIOUS": "#9B59B6",
+}
+
 
 @dataclass
 class SentimentResult:
@@ -17,7 +25,9 @@ class SentimentResult:
     color_theme: str   # hex color driven by mood
 
 
-_NEUTRAL_FALLBACK = SentimentResult(score=0.0, mood="NEUTRAL", color_theme="#95A5A6")
+_NEUTRAL_FALLBACK = SentimentResult(
+    score=0.0, mood="NEUTRAL", color_theme=MOOD_COLORS["NEUTRAL"]
+)
 
 
 class SentimentService:
@@ -30,6 +40,10 @@ class SentimentService:
     @property
     def is_loaded(self) -> bool:
         return self._pipe is not None
+
+    @property
+    def load_error(self) -> str | None:
+        return self._load_error
 
     def load(self) -> None:
         """Load the model. Called once at application startup via lifespan."""
@@ -78,12 +92,14 @@ class SentimentService:
 
 def _score_to_mood(score: float) -> tuple[str, str]:
     if score > 0.25:
-        return "HAPPY",   "#FFD700"  # altın sarısı
-    if score >= -0.25:
-        return "NEUTRAL", "#95A5A6"  # gri
-    if score >= -0.65:
-        return "SAD",     "#5B9BD5"  # mavi
-    return "ANXIOUS",     "#9B59B6"  # mor
+        mood = "HAPPY"
+    elif score >= -0.25:
+        mood = "NEUTRAL"
+    elif score >= -0.65:
+        mood = "SAD"
+    else:
+        mood = "ANXIOUS"
+    return mood, MOOD_COLORS[mood]
 
 
 # Module-level singleton — imported and reused across the app
