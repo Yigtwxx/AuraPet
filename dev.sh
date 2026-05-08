@@ -46,7 +46,7 @@ echo "    Bağımlılıklar kontrol ediliyor..."
 BACKEND_PID=$!
 
 echo "    Backend PID: $BACKEND_PID — health check bekleniyor..."
-MAX=30
+MAX=60
 for i in $(seq 1 $MAX); do
   if curl -fsS http://localhost:8000/api/health > /dev/null 2>&1; then
     echo "✅  Backend hazır."
@@ -83,11 +83,16 @@ FRONTEND_PID=$!
 # ──────────────────────────────────────────────
 sleep 3
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  ✅  Backend:   http://localhost:8000"
-echo "       GraphiQL: http://localhost:8000/graphql"
-echo "  ✅  Frontend:  http://localhost:3000"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  ✅  Backend:    http://localhost:8000"
+echo "       GraphiQL:  http://localhost:8000/graphql"
+echo "  ✅  Frontend:   http://localhost:3000"
+echo ""
+echo "  📱  iOS:  Xcode ile mobile-ios/AuraPet/ aç"
+echo "            Detaylar: mobile-ios/AuraPet/README.md"
+echo ""
+echo "  🧪  Smoke test: bash scripts/e2e-smoke.sh"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Çıkmak için Ctrl+C"
 echo ""
 
