@@ -31,8 +31,9 @@ echo ""
 echo "🐍  Backend başlatılıyor..."
 
 VENV="$REPO/backend/.venv"
-if [[ ! -d "$VENV" ]]; then
+if [[ ! -d "$VENV" ]] || ! "$VENV/bin/python3" -c "" 2>/dev/null; then
   echo "    Sanal ortam oluşturuluyor..."
+  rm -rf "$VENV"
   python3 -m venv "$VENV"
 fi
 
