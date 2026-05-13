@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 
 import strawberry
 from bson import ObjectId
+from graphql import GraphQLError
 
 from app.db.mongo import mongo
 from app.graphql.schema import Log, Pet, User
@@ -113,11 +115,13 @@ class Mutation:
         self,
         user_id: strawberry.ID,
         entry_text: str,
+        pet_id: Optional[strawberry.ID] = strawberry.UNSET,
     ) -> Pet:
         # Guard: model hazır değilse anlamlı bir hata döndür
         if not sentiment_service.is_loaded:
-            raise ValueError(
-                "AI modeli henüz hazır değil. Lütfen birkaç saniye bekleyip tekrar deneyin."
+            raise GraphQLError(
+                "AI modeli henüz hazır değil. Lütfen birkaç saniye bekleyip tekrar deneyin.",
+                extensions={"code": "AI_MODEL_UNAVAILABLE"},
             )
 
         # 1. Duygu analizi
@@ -136,8 +140,20 @@ class Mutation:
         }
         await mongo.db["logs"].insert_one(log_doc)
 
-        # 3. Kullanıcının petini bul (MVP: ilk pet); yoksa otomatik oluştur
-        pet_raw = await mongo.db["pets"].find_one({"user_id": str(user_id)})
+        # 3. Kullanıcının petini bul; pet_id belirtilmişse onu, yoksa ilk peti kullan
+        if pet_id and pet_id is not strawberry.UNSET:
+            try:
+                pet_oid_lookup = ObjectId(str(pet_id))
+            except Exception:
+                raise GraphQLError(
+                    f"Geçersiz pet_id: {pet_id}",
+                    extensions={"code": "INVALID_PET_ID"},
+                )
+            pet_raw = await mongo.db["pets"].find_one(
+                {"_id": pet_oid_lookup, "user_id": str(user_id)}
+            )
+        else:
+            pet_raw = await mongo.db["pets"].find_one({"user_id": str(user_id)})
         if pet_raw is None:
             logger.info("No pet found for user=%s — auto-creating 'Aura'", user_id)
             auto_doc = {
