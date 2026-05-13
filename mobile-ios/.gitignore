@@ -4,3 +4,4 @@ AuraPet.xcodeproj/
 xcuserdata/
 *.xcuserstate
 DerivedData/
+build/
