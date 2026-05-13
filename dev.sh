@@ -30,6 +30,9 @@ echo "✅  MongoDB hazır."
 echo ""
 echo "🐍  Backend başlatılıyor..."
 
+# .env yoksa örnek dosyadan oluştur
+[ -f "$REPO/backend/.env" ] || cp "$REPO/backend/.env.example" "$REPO/backend/.env"
+
 VENV="$REPO/backend/.venv"
 if [[ ! -d "$VENV" ]] || ! "$VENV/bin/python3" -c "" 2>/dev/null; then
   echo "    Sanal ortam oluşturuluyor..."
