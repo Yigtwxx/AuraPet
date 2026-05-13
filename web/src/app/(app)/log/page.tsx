@@ -1,40 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useMutation } from "@apollo/client";
+import { AnimatePresence, motion } from "framer-motion";
 import { ADD_LOG_ENTRY } from "@/graphql/operations";
-import { getUserId } from "@/lib/session";
+import { useRequireAuth } from "@/lib/useRequireAuth";
+import { useToast } from "@/components/ui/Toast";
+import PetAvatar from "@/components/PetAvatar";
+import XpBar from "@/components/XpBar";
+import GlassCard from "@/components/ui/GlassCard";
+import MoodChip from "@/components/ui/MoodChip";
+import SectionHeading from "@/components/ui/SectionHeading";
+import AnimatedNumber from "@/components/ui/AnimatedNumber";
 
-const MOOD_LABEL: Record<string, string> = {
-  HAPPY: "Mutlu 😄",
-  NEUTRAL: "Nötr 😐",
-  SAD: "Üzgün 😔",
-  ANXIOUS: "Endişeli 😰",
-};
+interface PetResult {
+  name: string;
+  level: number;
+  xp: number;
+  currentMood: string;
+  colorTheme: string;
+}
+
+const MAX_CHARS = 500;
 
 export default function LogPage() {
-  const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { userId, checking } = useRequireAuth();
+  const { showToast } = useToast();
   const [entryText, setEntryText] = useState("");
-  const [result, setResult] = useState<{
-    name: string;
-    level: number;
-    xp: number;
-    currentMood: string;
-    colorTheme: string;
-  } | null>(null);
+  const [result, setResult] = useState<PetResult | null>(null);
 
-  useEffect(() => {
-    const id = getUserId();
-    if (!id) {
-      router.replace("/login");
-      return;
-    }
-    setUserId(id);
-  }, [router]);
-
-  const [addLogEntry, { loading, error }] = useMutation(ADD_LOG_ENTRY, {
+  const [addLogEntry, { loading }] = useMutation(ADD_LOG_ENTRY, {
     onCompleted: (data) => {
       setResult(data.addLogEntry);
       setEntryText("");
@@ -44,65 +39,159 @@ export default function LogPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!entryText.trim() || !userId) return;
-    await addLogEntry({ variables: { userId, entryText: entryText.trim() } });
+    setResult(null);
+    try {
+      await addLogEntry({ variables: { userId, entryText: entryText.trim() } });
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Günlük eklenirken hata oluştu", "error");
+    }
   }
 
+  const charCount = entryText.length;
+  const isOverLimit = charCount > MAX_CHARS;
+
   return (
-    <div className="max-w-xl">
-      <h2 className="text-2xl font-bold mb-1">Günlük Ekle</h2>
-      <p className="text-aura-muted text-sm mb-8">
-        Bugün nasıl hissediyorsun? Petın sana göre evrilecek.
-      </p>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="max-w-2xl"
+    >
+      <SectionHeading
+        eyebrow="Günlük"
+        title="Bugün nasılsın?"
+        subtitle="Petın duygularını okuyup buna göre evrilecek."
+        className="mb-8"
+      />
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <textarea
-          value={entryText}
-          onChange={(e) => setEntryText(e.target.value)}
-          placeholder="Bugün çok mutluyum, harika bir gün geçirdim!"
-          required
-          rows={5}
-          className="rounded-xl px-4 py-3 bg-aura-panel border border-aura-border text-aura-text placeholder-aura-muted focus:outline-none focus:border-aura-accent transition-colors text-sm resize-none"
-        />
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Left: Input */}
+        <div className="flex flex-col gap-4">
+          <GlassCard className="p-5">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="relative">
+                <textarea
+                  value={entryText}
+                  onChange={(e) => setEntryText(e.target.value)}
+                  placeholder="Bugün çok mutluyum, harika bir gün geçirdim!"
+                  required
+                  rows={6}
+                  className="w-full rounded-xl px-4 py-3 text-aura-text placeholder-aura-muted/60 text-sm resize-none focus:outline-none transition-all"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: isOverLimit
+                      ? "1px solid rgba(239,68,68,0.5)"
+                      : "1px solid var(--color-border-strong)",
+                  }}
+                  onFocus={(e) => {
+                    if (!isOverLimit) {
+                      e.target.style.borderColor = "#7C5CFF60";
+                      e.target.style.boxShadow = "0 0 0 3px rgba(124,92,255,0.1)";
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = isOverLimit
+                      ? "rgba(239,68,68,0.5)"
+                      : "var(--color-border-strong)";
+                    e.target.style.boxShadow = "";
+                  }}
+                />
+                {/* Character counter */}
+                <span
+                  className="absolute bottom-3 right-3 text-xs tabular-nums"
+                  style={{ color: isOverLimit ? "#f87171" : "var(--color-aura-muted)" }}
+                >
+                  {charCount}/{MAX_CHARS}
+                </span>
+              </div>
 
-        {error && (
-          <p className="text-red-400 text-sm rounded-lg bg-red-400/10 px-3 py-2">
-            {error.message}
+              <button
+                type="submit"
+                disabled={loading || checking || !entryText.trim() || isOverLimit}
+                className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-40"
+                style={{
+                  background: "linear-gradient(135deg, #7C5CFF, #9B59B6)",
+                  boxShadow: "0 4px 20px rgba(124,92,255,0.25)",
+                }}
+              >
+                {loading ? "Analiz ediliyor..." : "Günlüğe Ekle"}
+              </button>
+            </form>
+          </GlassCard>
+
+          {/* Tips */}
+          <p className="text-xs text-aura-muted/60 text-center px-2">
+            Türkçe yaz — AI duygunu analiz edip petını güncelleyecek.
           </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading || !entryText.trim()}
-          className="py-3 rounded-xl bg-aura-accent text-white font-semibold hover:opacity-90 active:scale-95 disabled:opacity-50 transition-all"
-        >
-          {loading ? "Analiz ediliyor..." : "Günlüğe Ekle"}
-        </button>
-      </form>
-
-      {result && (
-        <div
-          className="mt-8 bg-aura-panel border rounded-2xl p-6 relative overflow-hidden"
-          style={{ borderColor: result.colorTheme }}
-        >
-          <div
-            className="absolute top-0 left-0 h-1 w-full"
-            style={{ backgroundColor: result.colorTheme }}
-          />
-          <p className="text-xs text-aura-muted mb-2">Petın güncellendi</p>
-          <h3 className="text-lg font-bold">{result.name}</h3>
-          <p className="text-sm font-medium mt-1" style={{ color: result.colorTheme }}>
-            {MOOD_LABEL[result.currentMood] ?? result.currentMood}
-          </p>
-          <div className="mt-4 flex gap-6 text-sm text-aura-muted">
-            <span>
-              Seviye <span className="text-aura-text font-bold">{result.level}</span>
-            </span>
-            <span>
-              XP <span className="text-aura-text font-bold">{result.xp}</span>
-            </span>
-          </div>
         </div>
-      )}
-    </div>
+
+        {/* Right: Result */}
+        <AnimatePresence mode="wait">
+          {result ? (
+            <motion.div
+              key={result.currentMood + result.xp}
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -8 }}
+              transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+            >
+              <GlassCard glow moodColor={result.colorTheme} className="p-5 h-full">
+                <p className="text-xs text-aura-muted mb-4 font-medium uppercase tracking-wide">
+                  Petın güncellendi ✨
+                </p>
+
+                <div className="flex flex-col items-center gap-4">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.15, type: "spring", stiffness: 260, damping: 18 }}
+                  >
+                    <PetAvatar
+                      mood={result.currentMood}
+                      level={result.level}
+                      color={result.colorTheme}
+                      size={100}
+                    />
+                  </motion.div>
+
+                  <div className="w-full text-center">
+                    <h3 className="text-base font-bold text-aura-text">{result.name}</h3>
+                    <div className="flex items-center justify-center gap-2 mt-1.5 mb-3">
+                      <MoodChip mood={result.currentMood} size="sm" />
+                      <span className="text-xs text-aura-muted">
+                        Seviye{" "}
+                        <AnimatedNumber value={result.level} className="font-bold text-aura-text" />
+                      </span>
+                    </div>
+                    <XpBar xp={result.xp} level={result.level} color={result.colorTheme} />
+                  </div>
+                </div>
+              </GlassCard>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="hidden lg:flex items-center justify-center"
+            >
+              <GlassCard className="p-8 text-center w-full">
+                <div className="opacity-10 flex justify-center mb-3">
+                  <svg width="64" height="64" viewBox="0 0 200 200" fill="none">
+                    <ellipse cx="100" cy="108" rx="55" ry="55" fill="#7C5CFF"/>
+                    <ellipse cx="60" cy="68" rx="18" ry="24" fill="#9B59B6"/>
+                    <ellipse cx="140" cy="68" rx="18" ry="24" fill="#9B59B6"/>
+                  </svg>
+                </div>
+                <p className="text-xs text-aura-muted">
+                  Günlüğünü yazdıktan sonra<br />petın burada görünecek.
+                </p>
+              </GlassCard>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }
