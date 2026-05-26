@@ -43,7 +43,7 @@ class _MockCollection:
         result.inserted_id = oid
         return result
 
-    async def find_one(self, query: dict):
+    async def find_one(self, query: dict, projection=None):
         for doc in self._docs:
             if self._matches(doc, query):
                 return doc
@@ -64,7 +64,10 @@ class _MockCollection:
 
     def _matches(self, doc: dict, query: dict) -> bool:
         for k, v in query.items():
-            if str(doc.get(k)) != str(v) and doc.get(k) != v:
+            if k == "$or":
+                if not any(self._matches(doc, clause) for clause in v):
+                    return False
+            elif str(doc.get(k)) != str(v) and doc.get(k) != v:
                 return False
         return True
 
