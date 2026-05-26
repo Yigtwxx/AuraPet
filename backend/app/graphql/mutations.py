@@ -7,9 +7,10 @@ from typing import Optional
 import strawberry
 from bson import ObjectId
 from graphql import GraphQLError
+from pymongo.errors import DuplicateKeyError
 
 from app.db.mongo import mongo
-from app.graphql.schema import Log, Pet, User
+from app.graphql.schema import Log, LogAnalysisResult, Pet, User
 from app.models import bson_to_str
 from app.models.pet import PetDocument
 from app.services.ai import MOOD_COLORS, sentiment_service
@@ -63,12 +64,40 @@ class Mutation:
         )
     )
     async def create_user(self, username: str, email: str) -> User:
+        existing = await mongo.db["users"].find_one(
+            {"$or": [{"username": username}, {"email": email}]},
+            {"username": 1, "email": 1},
+        )
+        if existing:
+            if existing.get("username") == username:
+                raise GraphQLError(
+                    "Bu kullanıcı adı zaten kullanılıyor. Lütfen farklı bir tane seçin.",
+                    extensions={"code": "USERNAME_TAKEN", "field": "username"},
+                )
+            raise GraphQLError(
+                "Bu e-posta adresi zaten kayıtlı. Lütfen farklı bir e-posta kullanın.",
+                extensions={"code": "EMAIL_TAKEN", "field": "email"},
+            )
+
         doc = {
             "username": username,
             "email": email,
             "created_at": datetime.now(timezone.utc),
         }
-        result = await mongo.db["users"].insert_one(doc)
+        try:
+            result = await mongo.db["users"].insert_one(doc)
+        except DuplicateKeyError as exc:
+            pattern = (exc.details or {}).get("keyPattern", {})
+            if "username" in pattern:
+                raise GraphQLError(
+                    "Bu kullanıcı adı zaten kullanılıyor. Lütfen farklı bir tane seçin.",
+                    extensions={"code": "USERNAME_TAKEN", "field": "username"},
+                ) from exc
+            raise GraphQLError(
+                "Bu e-posta adresi zaten kayıtlı. Lütfen farklı bir e-posta kullanın.",
+                extensions={"code": "EMAIL_TAKEN", "field": "email"},
+            ) from exc
+
         logger.info("New user created: id=%s username=%s", result.inserted_id, username)
         return User(
             id=strawberry.ID(str(result.inserted_id)),
@@ -116,7 +145,7 @@ class Mutation:
         user_id: strawberry.ID,
         entry_text: str,
         pet_id: Optional[strawberry.ID] = strawberry.UNSET,
-    ) -> Pet:
+    ) -> LogAnalysisResult:
         # Guard: model hazır değilse anlamlı bir hata döndür
         if not sentiment_service.is_loaded:
             raise GraphQLError(
@@ -197,13 +226,17 @@ class Mutation:
             },
         )
 
-        # 6. Güncellenmiş Pet'i döndür
-        return Pet(
-            id=strawberry.ID(str(pet.id)),
-            user_id=user_id,
-            name=pet.name,
-            level=new_level,
-            xp=new_xp,
-            current_mood=result.mood,
-            color_theme=result.color_theme,
+        # 6. Güncellenmiş Pet ve sentiment etiketini döndür
+        return LogAnalysisResult(
+            pet=Pet(
+                id=strawberry.ID(str(pet.id)),
+                user_id=user_id,
+                name=pet.name,
+                level=new_level,
+                xp=new_xp,
+                current_mood=result.mood,
+                color_theme=result.color_theme,
+            ),
+            sentiment_label=result.label,
+            sentiment_score=result.score,
         )
