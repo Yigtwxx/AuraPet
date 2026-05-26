@@ -1,5 +1,5 @@
 # XcodeGen tarafından üretilir — commit etme
-AuraPet.xcodeproj/
+AuraPet*.xcodeproj/
 # Xcode kullanıcı verileri
 xcuserdata/
 *.xcuserstate
