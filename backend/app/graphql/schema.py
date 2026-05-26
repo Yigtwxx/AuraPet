@@ -38,3 +38,15 @@ class Log:
     entry_text: str
     sentiment_score: float  # -1.0 (çok negatif) → +1.0 (çok pozitif)
     created_at: str          # ISO-8601 formatında tarih
+
+
+@strawberry.type(
+    description=(
+        "addLogEntry mutation'ının sonucu. Güncellenmiş pet'i ve "
+        "yazının ham 3-sınıflı sentiment etiketini (POSITIVE/NEGATIVE/NEUTRAL) içerir."
+    )
+)
+class LogAnalysisResult:
+    pet: Pet
+    sentiment_label: str   # POSITIVE | NEGATIVE | NEUTRAL
+    sentiment_score: float  # -1.0 .. +1.0
