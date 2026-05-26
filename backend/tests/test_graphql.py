@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+from graphql import GraphQLError
 from unittest.mock import patch, MagicMock
 
 from app.graphql.mutations import Mutation, _calculate_xp_gain, _calculate_level
@@ -30,6 +31,26 @@ async def test_create_user(mutation, mock_mongo_db):
     assert user.username == "testuser"
     assert user.email == "t@test.com"
     assert user.id is not None
+
+
+@pytest.mark.asyncio
+async def test_create_user_duplicate_username(mutation, mock_mongo_db):
+    await mock_mongo_db["users"].insert_one({"username": "taken", "email": "a@a.com"})
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        with pytest.raises(GraphQLError) as exc_info:
+            await mutation.create_user(username="taken", email="b@b.com")
+    assert exc_info.value.extensions["code"] == "USERNAME_TAKEN"
+
+
+@pytest.mark.asyncio
+async def test_create_user_duplicate_email(mutation, mock_mongo_db):
+    await mock_mongo_db["users"].insert_one({"username": "other", "email": "dup@dup.com"})
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        with pytest.raises(GraphQLError) as exc_info:
+            await mutation.create_user(username="newuser", email="dup@dup.com")
+    assert exc_info.value.extensions["code"] == "EMAIL_TAKEN"
 
 
 # ── create_pet ─────────────────────────────────────────────────────────────
