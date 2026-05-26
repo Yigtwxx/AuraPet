@@ -31,7 +31,7 @@ class Mongo:
     async def _ensure_indexes(self) -> None:
         db = self._db
         await db["users"].create_index([("username", _ASC)], unique=True, background=True)
-        await db["users"].create_index([("email", _ASC)], background=True)
+        await db["users"].create_index([("email", _ASC)], unique=True, background=True)
         await db["pets"].create_index([("user_id", _ASC)], background=True)
         await db["logs"].create_index(
             [("user_id", _ASC), ("created_at", _DESC)], background=True
