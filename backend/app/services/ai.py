@@ -23,10 +23,11 @@ class SentimentResult:
     score: float       # -1.0 (very negative) to +1.0 (very positive)
     mood: str          # HAPPY | NEUTRAL | SAD | ANXIOUS
     color_theme: str   # hex color driven by mood
+    label: str         # POSITIVE | NEGATIVE | NEUTRAL (raw 3-class)
 
 
 _NEUTRAL_FALLBACK = SentimentResult(
-    score=0.0, mood="NEUTRAL", color_theme=MOOD_COLORS["NEUTRAL"]
+    score=0.0, mood="NEUTRAL", color_theme=MOOD_COLORS["NEUTRAL"], label="NEUTRAL"
 )
 
 
@@ -83,7 +84,12 @@ class SentimentService:
                 score = 0.0
 
             mood, color = _score_to_mood(score)
-            return SentimentResult(score=round(score, 4), mood=mood, color_theme=color)
+            return SentimentResult(
+                score=round(score, 4),
+                mood=mood,
+                color_theme=color,
+                label=label.upper(),  # "positive" → "POSITIVE"
+            )
 
         except Exception:
             logger.exception("Sentiment analysis failed; returning neutral fallback.")
