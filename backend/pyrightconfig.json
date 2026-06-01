@@ -2,6 +2,15 @@
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.9",
-  "reportMissingImports": "none",
-  "reportMissingModuleSource": "none"
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingModuleSource": "none",
+  "reportUnusedImport": "warning",
+  "reportUnusedVariable": "warning",
+  "reportReturnType": "warning",
+  "reportGeneralTypeIssues": "warning",
+  "exclude": [
+    ".venv",
+    "**/__pycache__"
+  ]
 }
