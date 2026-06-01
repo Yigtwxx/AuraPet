@@ -1,9 +1,10 @@
 """REST route tests using HTTPX AsyncClient with mocked dependencies."""
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture
@@ -56,7 +57,7 @@ async def test_analyze_returns_503_when_model_not_loaded(client):
 @pytest.mark.asyncio
 async def test_analyze_returns_result(client):
     from app.services.ai import SentimentResult
-    mock_result = SentimentResult(score=0.85, mood="HAPPY", color_theme="#FFD700")
+    mock_result = SentimentResult(score=0.85, mood="HAPPY", color_theme="#FFD700", label="POSITIVE")
 
     with patch("app.api.routes.sentiment_service") as mock_svc:
         mock_svc.is_loaded = True
