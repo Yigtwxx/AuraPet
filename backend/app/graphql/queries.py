@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import strawberry
-from typing import List
 
 from app.db.mongo import mongo
 from app.graphql.schema import Log, Pet
@@ -16,11 +15,12 @@ class Query:
     @strawberry.field(
         description="Bir kullanıcıya ait tüm evcil hayvanları döndürür."
     )
-    async def get_user_pets(self, user_id: strawberry.ID) -> List[Pet]:
+    async def get_user_pets(self, user_id: strawberry.ID) -> list[Pet]:
         cursor = mongo.db["pets"].find({"user_id": str(user_id)})
-        pets: List[Pet] = []
+        pets: list[Pet] = []
         async for doc in cursor:
             pet_doc = PetDocument.model_validate(bson_to_str(doc))
+            assert pet_doc.id is not None
             pets.append(
                 Pet(
                     id=strawberry.ID(pet_doc.id),
@@ -40,14 +40,15 @@ class Query:
             "sıralayarak döndürür."
         )
     )
-    async def get_logs(self, user_id: strawberry.ID) -> List[Log]:
+    async def get_logs(self, user_id: strawberry.ID) -> list[Log]:
         cursor = mongo.db["logs"].find(
             {"user_id": str(user_id)},
             sort=[("created_at", -1)],
         )
-        logs: List[Log] = []
+        logs: list[Log] = []
         async for doc in cursor:
             log_doc = LogDocument.model_validate(bson_to_str(doc))
+            assert log_doc.id is not None
             logs.append(
                 Log(
                     id=strawberry.ID(log_doc.id),
