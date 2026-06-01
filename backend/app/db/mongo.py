@@ -29,7 +29,8 @@ class Mongo:
         await self._ensure_indexes()
 
     async def _ensure_indexes(self) -> None:
-        db = self._db
+        assert self._db is not None
+        db: AsyncIOMotorDatabase = self._db
         await db["users"].create_index([("username", _ASC)], unique=True, background=True)
         await db["users"].create_index([("email", _ASC)], unique=True, background=True)
         await db["pets"].create_index([("user_id", _ASC)], background=True)
