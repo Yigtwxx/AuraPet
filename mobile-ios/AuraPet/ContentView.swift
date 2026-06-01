@@ -2,6 +2,15 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var isLoggedIn: Bool = Session.shared.userId != nil
+    @AppStorage("aurapet_theme") private var colorSchemePreference = "system"
+
+    private var preferredColorScheme: ColorScheme? {
+        switch colorSchemePreference {
+        case "light": return .light
+        case "dark":  return .dark
+        default:      return nil
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -11,11 +20,12 @@ struct ContentView: View {
                 SplashView(isLoggedIn: $isLoggedIn)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(preferredColorScheme)
     }
 }
 
-// ── MainTabView with custom AuraTabBar ───────────────────────────────────────
+// MARK: - MainTabView
+
 struct MainTabView: View {
     let userId: String
     @Binding var isLoggedIn: Bool
@@ -23,11 +33,9 @@ struct MainTabView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Aurora background driven by active tab
             AuroraBackground(mood: tabMood)
                 .ignoresSafeArea()
 
-            // Tab content
             Group {
                 switch selectedTab {
                 case .dashboard: DashboardView(userId: userId)
@@ -37,14 +45,9 @@ struct MainTabView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom, 72) // space for tab bar
-
-            // Custom tab bar
-            VStack(spacing: 0) {
-                Spacer()
+            .safeAreaInset(edge: .bottom) {
                 AuraTabBar(selected: $selectedTab)
             }
-            .ignoresSafeArea(edges: .bottom)
         }
     }
 
