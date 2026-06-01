@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
-import torch
 from dataclasses import dataclass
+from typing import Any, Callable
+
+import torch
 from transformers import pipeline
 
 logger = logging.getLogger(__name__)
@@ -35,7 +37,7 @@ class SentimentService:
     """Loads the Turkish BERT sentiment model once and exposes analyze()."""
 
     def __init__(self) -> None:
-        self._pipe = None
+        self._pipe: Callable[..., Any] | None = None
         self._load_error: str | None = None
 
     @property
