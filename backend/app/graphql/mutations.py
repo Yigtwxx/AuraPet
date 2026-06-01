@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
 
 import strawberry
 from bson import ObjectId
@@ -10,7 +9,7 @@ from graphql import GraphQLError
 from pymongo.errors import DuplicateKeyError
 
 from app.db.mongo import mongo
-from app.graphql.schema import Log, LogAnalysisResult, Pet, User
+from app.graphql.schema import LogAnalysisResult, Pet, User
 from app.models import bson_to_str
 from app.models.pet import PetDocument
 from app.services.ai import MOOD_COLORS, sentiment_service
@@ -79,10 +78,11 @@ class Mutation:
                 extensions={"code": "EMAIL_TAKEN", "field": "email"},
             )
 
+        created_at: datetime = datetime.now(timezone.utc)
         doc = {
             "username": username,
             "email": email,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": created_at,
         }
         try:
             result = await mongo.db["users"].insert_one(doc)
@@ -103,7 +103,7 @@ class Mutation:
             id=strawberry.ID(str(result.inserted_id)),
             username=username,
             email=email,
-            created_at=doc["created_at"].isoformat(),
+            created_at=created_at.isoformat(),
         )
 
     @strawberry.mutation(
@@ -144,7 +144,7 @@ class Mutation:
         self,
         user_id: strawberry.ID,
         entry_text: str,
-        pet_id: Optional[strawberry.ID] = strawberry.UNSET,
+        pet_id: strawberry.ID | None = strawberry.UNSET,
     ) -> LogAnalysisResult:
         # Guard: model hazır değilse anlamlı bir hata döndür
         if not sentiment_service.is_loaded:
@@ -173,11 +173,11 @@ class Mutation:
         if pet_id and pet_id is not strawberry.UNSET:
             try:
                 pet_oid_lookup = ObjectId(str(pet_id))
-            except Exception:
+            except Exception as exc:
                 raise GraphQLError(
                     f"Geçersiz pet_id: {pet_id}",
                     extensions={"code": "INVALID_PET_ID"},
-                )
+                ) from exc
             pet_raw = await mongo.db["pets"].find_one(
                 {"_id": pet_oid_lookup, "user_id": str(user_id)}
             )
@@ -195,6 +195,7 @@ class Mutation:
             }
             insert_result = await mongo.db["pets"].insert_one(auto_doc)
             pet_raw = await mongo.db["pets"].find_one({"_id": insert_result.inserted_id})
+        assert pet_raw is not None
         pet = PetDocument.model_validate(bson_to_str(pet_raw))
 
         # 4. XP ve seviye hesapla
@@ -211,8 +212,8 @@ class Mutation:
         # 5. Peti güncelle
         try:
             pet_oid = ObjectId(pet.id)
-        except Exception:
-            raise ValueError(f"Geçersiz pet kimliği: {pet.id}")
+        except Exception as exc:
+            raise ValueError(f"Geçersiz pet kimliği: {pet.id}") from exc
 
         await mongo.db["pets"].update_one(
             {"_id": pet_oid},
