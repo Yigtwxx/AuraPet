@@ -11,7 +11,7 @@ schema = strawberry.Schema(
     mutation=Mutation,
 )
 
-graphql_router = GraphQLRouter(
+graphql_router: GraphQLRouter = GraphQLRouter(
     schema,
-    graphiql=True,   # /graphql adresinde interaktif GraphiQL playground
+    graphiql=True,
 )
