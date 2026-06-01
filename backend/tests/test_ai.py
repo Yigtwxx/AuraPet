@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import pytest
 
+from app.graphql.mutations import _calculate_level, _calculate_xp_gain
 from app.services.ai import MOOD_COLORS, SentimentResult, SentimentService, _score_to_mood
-from app.graphql.mutations import _calculate_xp_gain, _calculate_level
-
 
 # ── _score_to_mood ─────────────────────────────────────────────────────────
 
