@@ -50,12 +50,16 @@ export const CREATE_PET = gql`
 export const ADD_LOG_ENTRY = gql`
   mutation AddLogEntry($userId: ID!, $entryText: String!) {
     addLogEntry(userId: $userId, entryText: $entryText) {
-      id
-      name
-      level
-      xp
-      currentMood
-      colorTheme
+      sentimentLabel
+      sentimentScore
+      pet {
+        id
+        name
+        level
+        xp
+        currentMood
+        colorTheme
+      }
     }
   }
 `;
