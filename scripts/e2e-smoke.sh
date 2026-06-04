@@ -3,28 +3,35 @@
 # Kullanım: bash scripts/e2e-smoke.sh [backend_url]
 # Bağımlılık: curl, jq
 
-set -euo pipefail
+set -uo pipefail
 
 GQL="${1:-http://localhost:8000/graphql}"
 PASS=0; FAIL=0
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; RESET='\033[0m'
 
-ok()   { echo -e "${GREEN}✓${RESET} $1"; ((PASS++)); }
-fail() { echo -e "${RED}✗${RESET} $1"; ((FAIL++)); }
+ok()   { echo -e "${GREEN}✓${RESET} $1"; PASS=$((PASS + 1)); }
+fail() { echo -e "${RED}✗${RESET} $1"; FAIL=$((FAIL + 1)); }
 
 gql() {
-  local query="$1"; local vars="${2:-{}}"
-  curl -sf -X POST "$GQL" \
+  local query="$1"
+  # ${2:-{}} bash parsing bug: {} default adds extra }, so use explicit fallback
+  local vars="${2:-}"
+  [ -z "$vars" ] && vars="{}"
+  local body
+  body=$(jq -n --arg q "$query" --argjson v "$vars" '{"query": $q, "variables": $v}')
+  curl -s -X POST "$GQL" \
     -H "Content-Type: application/json" \
-    -d "{\"query\": $(echo "$query" | jq -Rs .), \"variables\": $vars}"
+    -d "$body" \
+    || echo '{}'
 }
 
 echo "🔍 AuraPet Smoke Test — $GQL"
 echo "─────────────────────────────────"
 
-# 1. Health check
-health=$(curl -sf "${GQL/graphql/api\/health}" 2>/dev/null || echo '{}')
+# 1. Health check — base URL'den /api/health türet
+BASE_URL="${GQL%/graphql}"
+health=$(curl -s "${BASE_URL}/api/health" 2>/dev/null || echo '{}')
 if echo "$health" | jq -e '.status == "ok"' >/dev/null 2>&1; then
   ok "Health check: status=ok"
 else
@@ -65,18 +72,22 @@ else
 fi
 
 # 4. addLogEntry (ilk not — pozitif duygu)
+# Not: backend LogAnalysisResult döndürür { sentimentLabel sentimentScore pet { ... } }
 log1_resp=$(gql '
   mutation AddLog($uid: ID!, $text: String!) {
     addLogEntry(userId: $uid, entryText: $text) {
-      id name level xp currentMood colorTheme
+      sentimentLabel
+      sentimentScore
+      pet { id name level xp currentMood colorTheme }
     }
   }
 ' "{\"uid\": \"$USER_ID\", \"text\": \"Bugün harika hissediyorum, çok mutluyum!\"}")
 
-PET_MOOD=$(echo "$log1_resp" | jq -r '.data.addLogEntry.currentMood // empty')
-PET_XP=$(echo "$log1_resp" | jq -r '.data.addLogEntry.xp // 0')
+PET_MOOD=$(echo "$log1_resp" | jq -r '.data.addLogEntry.pet.currentMood // empty')
+PET_XP=$(echo "$log1_resp" | jq -r '.data.addLogEntry.pet.xp // 0')
+SENT_LABEL=$(echo "$log1_resp" | jq -r '.data.addLogEntry.sentimentLabel // empty')
 if [[ -n "$PET_MOOD" ]]; then
-  ok "addLogEntry (pozitif): mood=$PET_MOOD xp=$PET_XP"
+  ok "addLogEntry (pozitif): mood=$PET_MOOD xp=$PET_XP sentimentLabel=$SENT_LABEL"
 else
   fail "addLogEntry (pozitif): ${log1_resp}"
 fi
@@ -85,12 +96,14 @@ fi
 log2_resp=$(gql '
   mutation AddLog($uid: ID!, $text: String!) {
     addLogEntry(userId: $uid, entryText: $text) {
-      id name level xp currentMood
+      sentimentLabel
+      sentimentScore
+      pet { id name level xp currentMood }
     }
   }
 ' "{\"uid\": \"$USER_ID\", \"text\": \"Bugün biraz yorgunum ama idare eder.\"}")
 
-PET_XP2=$(echo "$log2_resp" | jq -r '.data.addLogEntry.xp // 0')
+PET_XP2=$(echo "$log2_resp" | jq -r '.data.addLogEntry.pet.xp // 0')
 if [[ "$PET_XP2" -gt "$PET_XP" ]]; then
   ok "addLogEntry (XP birikimi): xp $PET_XP → $PET_XP2"
 else
@@ -132,5 +145,5 @@ fi
 
 # Sonuç
 echo "─────────────────────────────────"
-echo "Sonuç: ${GREEN}${PASS} geçti${RESET}, ${RED}${FAIL} başarısız${RESET}"
+echo -e "Sonuç: ${GREEN}${PASS} geçti${RESET}, ${RED}${FAIL} başarısız${RESET}"
 [[ $FAIL -eq 0 ]] && exit 0 || exit 1
