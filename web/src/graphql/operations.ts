@@ -47,6 +47,25 @@ export const CREATE_PET = gql`
   }
 `;
 
+export const UPDATE_PET = gql`
+  mutation UpdatePet($petId: ID!, $name: String!) {
+    updatePet(petId: $petId, name: $name) {
+      id
+      name
+      level
+      xp
+      currentMood
+      colorTheme
+    }
+  }
+`;
+
+export const DELETE_PET = gql`
+  mutation DeletePet($petId: ID!) {
+    deletePet(petId: $petId)
+  }
+`;
+
 export const ADD_LOG_ENTRY = gql`
   mutation AddLogEntry($userId: ID!, $entryText: String!) {
     addLogEntry(userId: $userId, entryText: $entryText) {
