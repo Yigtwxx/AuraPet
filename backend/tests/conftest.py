@@ -56,6 +56,26 @@ class _MockCollection:
                     doc.update(update["$set"])
                 break
 
+    async def find_one_and_update(self, query: dict, update: dict, return_document=None):
+        from pymongo import ReturnDocument
+        for doc in self._docs:
+            if self._matches(doc, query):
+                before = dict(doc)
+                if "$set" in update:
+                    doc.update(update["$set"])
+                return doc if return_document == ReturnDocument.AFTER else before
+        return None
+
+    async def delete_one(self, query: dict):
+        result = MagicMock()
+        for i, doc in enumerate(self._docs):
+            if self._matches(doc, query):
+                del self._docs[i]
+                result.deleted_count = 1
+                return result
+        result.deleted_count = 0
+        return result
+
     async def create_index(self, *args, **kwargs):
         pass
 
