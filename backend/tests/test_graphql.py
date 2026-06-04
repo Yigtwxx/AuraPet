@@ -126,6 +126,80 @@ async def test_create_multiple_pets(mutation, mock_mongo_db):
     assert p1.id != p2.id
 
 
+# ── update_pet ─────────────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_update_pet_renames(mutation, mock_mongo_db):
+    res = await mock_mongo_db["pets"].insert_one({
+        "user_id": "u1", "name": "OldName", "level": 2,
+        "xp": 150, "current_mood": "HAPPY", "color_theme": "#FFD700",
+    })
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        pet = await mutation.update_pet(pet_id=str(res.inserted_id), name="NewName")
+
+    assert pet.name == "NewName"
+    assert pet.level == 2   # diğer alanlar korunur
+    assert pet.xp == 150
+    assert pet.current_mood == "HAPPY"
+
+
+@pytest.mark.asyncio
+async def test_update_pet_invalid_id(mutation, mock_mongo_db):
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        with pytest.raises(GraphQLError) as exc_info:
+            await mutation.update_pet(pet_id="not-an-objectid", name="X")
+    assert exc_info.value.extensions["code"] == "INVALID_PET_ID"
+
+
+@pytest.mark.asyncio
+async def test_update_pet_not_found(mutation, mock_mongo_db):
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        with pytest.raises(GraphQLError) as exc_info:
+            await mutation.update_pet(pet_id="507f1f77bcf86cd799439099", name="X")
+    assert exc_info.value.extensions["code"] == "PET_NOT_FOUND"
+
+
+# ── delete_pet ─────────────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_delete_pet_removes_pet(mutation, query, mock_mongo_db):
+    user_id = "507f1f77bcf86cd799439030"
+    res = await mock_mongo_db["pets"].insert_one({
+        "user_id": user_id, "name": "Doomed", "level": 1,
+        "xp": 0, "current_mood": "NEUTRAL", "color_theme": "#95A5A6",
+    })
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        ok = await mutation.delete_pet(pet_id=str(res.inserted_id))
+    assert ok is True
+
+    # Silindikten sonra getUserPets boş dönmeli
+    with patch("app.graphql.queries.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        pets = await query.get_user_pets(user_id=user_id)
+    assert pets == []
+
+
+@pytest.mark.asyncio
+async def test_delete_pet_invalid_id(mutation, mock_mongo_db):
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        with pytest.raises(GraphQLError) as exc_info:
+            await mutation.delete_pet(pet_id="bad-id")
+    assert exc_info.value.extensions["code"] == "INVALID_PET_ID"
+
+
+@pytest.mark.asyncio
+async def test_delete_pet_nonexistent_returns_false(mutation, mock_mongo_db):
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        ok = await mutation.delete_pet(pet_id="507f1f77bcf86cd799439098")
+    assert ok is False
+
+
 # ── add_log_entry — happy path ─────────────────────────────────────────────
 
 @pytest.mark.asyncio
