@@ -75,12 +75,22 @@ class SentimentService:
 
         try:
             raw = self._pipe(text, truncation=True, max_length=512)[0]
-            label: str = raw["label"].lower()   # "positive" | "negative" | "neutral"
-            conf: float = raw["score"]          # 0.0 – 1.0
+            raw_label: str = raw["label"]   # e.g. "LABEL_0" | "LABEL_1" | "LABEL_2"
+            conf: float = raw["score"]      # 0.0 – 1.0
 
-            if label == "positive":
+            # Model saribasmetehan/bert-base-turkish-sentiment-analysis
+            # id2label: {0: LABEL_0=NEUTRAL, 1: LABEL_1=POSITIVE, 2: LABEL_2=NEGATIVE}
+            # (Doğrulama: inference test sonuçlarıyla belirlendi)
+            label_map: dict[str, str] = {
+                "LABEL_0": "NEUTRAL",
+                "LABEL_1": "POSITIVE",
+                "LABEL_2": "NEGATIVE",
+            }
+            canonical = label_map.get(raw_label.upper(), raw_label.upper())
+
+            if canonical == "POSITIVE":
                 score = conf
-            elif label == "negative":
+            elif canonical == "NEGATIVE":
                 score = -conf
             else:
                 score = 0.0
@@ -90,7 +100,7 @@ class SentimentService:
                 score=round(score, 4),
                 mood=mood,
                 color_theme=color,
-                label=label.upper(),  # "positive" → "POSITIVE"
+                label=canonical,   # "POSITIVE" | "NEGATIVE" | "NEUTRAL"
             )
 
         except Exception:
