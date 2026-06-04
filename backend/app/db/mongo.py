@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pymongo.errors import OperationFailure
 
 from app.core.config import settings
 
@@ -29,14 +30,43 @@ class Mongo:
         await self._ensure_indexes()
 
     async def _ensure_indexes(self) -> None:
+        """
+        Koleksiyonlar üzerinde gerekli indexleri oluşturur.
+
+        Önemli notlar:
+        - `background` parametresi MongoDB 4.2'de deprecated, 5.0'da kaldırıldı;
+          modern sürümlerde tüm index oluşturma işlemleri zaten non-blocking çalışır.
+        - Mevcut non-unique bir index ile unique bir index çakışırsa (kod 86),
+          eski index silinip doğru formda yeniden oluşturulur.
+        """
         assert self._db is not None
         db: AsyncIOMotorDatabase = self._db
-        await db["users"].create_index([("username", _ASC)], unique=True, background=True)
-        await db["users"].create_index([("email", _ASC)], unique=True, background=True)
-        await db["pets"].create_index([("user_id", _ASC)], background=True)
-        await db["logs"].create_index(
-            [("user_id", _ASC), ("created_at", _DESC)], background=True
-        )
+
+        async def _create_unique(
+            collection: str, key: list, index_name: str
+        ) -> None:
+            """Unique index oluşturur; çakışma varsa eski indexi silip yeniden kurar."""
+            try:
+                await db[collection].create_index(key, unique=True)
+            except OperationFailure as exc:
+                # Kod 86: IndexKeySpecsConflict —
+                # aynı isimde non-unique bir index var, unique olarak değiştirilmeli.
+                if exc.code == 86:
+                    logger.warning(
+                        "Index '%s' on '%s' non-unique olarak mevcut — "
+                        "siliniyor ve unique olarak yeniden oluşturuluyor.",
+                        index_name,
+                        collection,
+                    )
+                    await db[collection].drop_index(index_name)
+                    await db[collection].create_index(key, unique=True)
+                else:
+                    raise
+
+        await _create_unique("users", [("username", _ASC)], "username_1")
+        await _create_unique("users", [("email", _ASC)], "email_1")
+        await db["pets"].create_index([("user_id", _ASC)])
+        await db["logs"].create_index([("user_id", _ASC), ("created_at", _DESC)])
         logger.info("MongoDB indexes ensured.")
 
     async def disconnect(self) -> None:
