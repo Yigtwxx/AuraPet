@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import strawberry
 from bson import ObjectId
 from graphql import GraphQLError
+from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from app.db.mongo import mongo
@@ -132,6 +133,66 @@ class Mutation:
             current_mood="NEUTRAL",
             color_theme=MOOD_COLORS["NEUTRAL"],
         )
+
+    @strawberry.mutation(
+        description=(
+            "Mevcut bir pet'in adını günceller. Diğer alanlar (seviye, XP, ruh hali) "
+            "korunur. Güncellenmiş Pet nesnesi döndürülür."
+        )
+    )
+    async def update_pet(self, pet_id: strawberry.ID, name: str) -> Pet:
+        try:
+            pet_oid = ObjectId(str(pet_id))
+        except Exception as exc:
+            raise GraphQLError(
+                f"Geçersiz pet_id: {pet_id}",
+                extensions={"code": "INVALID_PET_ID"},
+            ) from exc
+
+        updated = await mongo.db["pets"].find_one_and_update(
+            {"_id": pet_oid},
+            {"$set": {"name": name}},
+            return_document=ReturnDocument.AFTER,
+        )
+        if updated is None:
+            raise GraphQLError(
+                "Güncellenecek pet bulunamadı.",
+                extensions={"code": "PET_NOT_FOUND"},
+            )
+
+        pet = PetDocument.model_validate(bson_to_str(updated))
+        assert pet.id is not None
+        logger.info("Pet renamed: id=%s name=%s", pet.id, name)
+        return Pet(
+            id=strawberry.ID(pet.id),
+            user_id=strawberry.ID(pet.user_id),
+            name=pet.name,
+            level=pet.level,
+            xp=pet.xp,
+            current_mood=pet.current_mood,
+            color_theme=pet.color_theme,
+        )
+
+    @strawberry.mutation(
+        description=(
+            "Bir pet'i kalıcı olarak siler. Silme başarılıysa true, "
+            "böyle bir pet yoksa false döndürür."
+        )
+    )
+    async def delete_pet(self, pet_id: strawberry.ID) -> bool:
+        try:
+            pet_oid = ObjectId(str(pet_id))
+        except Exception as exc:
+            raise GraphQLError(
+                f"Geçersiz pet_id: {pet_id}",
+                extensions={"code": "INVALID_PET_ID"},
+            ) from exc
+
+        result = await mongo.db["pets"].delete_one({"_id": pet_oid})
+        deleted = result.deleted_count > 0
+        if deleted:
+            logger.info("Pet deleted: id=%s", pet_id)
+        return deleted
 
     @strawberry.mutation(
         description=(
