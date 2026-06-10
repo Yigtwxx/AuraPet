@@ -9,100 +9,109 @@ struct AurionNovaShape: View {
             func ellipseRect(_ cx: CGFloat, _ cy: CGFloat, _ rx: CGFloat, _ ry: CGFloat) -> CGRect { AurionDraw.ellipseRect(cx, cy, rx, ry, size: size) }
             func sw(_ w: CGFloat) -> CGFloat { AurionDraw.strokeWidth(w, size: size) }
 
-            // halo ring (drawn first — behind head)
-            let haloRect = ellipseRect(100, 44, 36, 9)
-            var halo = Path()
-            halo.addEllipse(in: haloRect)
-            ctx.stroke(halo, with: .color(.white.opacity(0.55)),
-                       style: StrokeStyle(lineWidth: sw(2.5)))
+            let inkColor = Color(red: 0.102, green: 0.114, blue: 0.141)
+            let blush = Color(hex: "#FF8FA3")
 
-            // very wide wings
-            var wings = Path()
-            wings.move(to: pt(60, 114))
-            wings.addCurve(to: pt(44, 156), control1: pt(18, 88), control2: pt(4, 140))
-            wings.addLine(to: pt(60, 144))
-            wings.closeSubpath()
-            wings.move(to: pt(140, 114))
-            wings.addCurve(to: pt(156, 156), control1: pt(182, 88), control2: pt(196, 140))
-            wings.addLine(to: pt(140, 144))
-            wings.closeSubpath()
-            ctx.fill(wings, with: .color(color.opacity(0.8)))
+            func star(_ p: inout Path, _ cx: CGFloat, _ cy: CGFloat, _ r: CGFloat) {
+                p.move(to: pt(cx, cy - r))
+                p.addQuadCurve(to: pt(cx + r, cy), control: pt(cx, cy))
+                p.addQuadCurve(to: pt(cx, cy + r), control: pt(cx, cy))
+                p.addQuadCurve(to: pt(cx - r, cy), control: pt(cx, cy))
+                p.addQuadCurve(to: pt(cx, cy - r), control: pt(cx, cy))
+                p.closeSubpath()
+            }
 
-            // wing veins
-            var veins = Path()
-            veins.move(to: pt(60, 114)); veins.addCurve(to: pt(44, 140), control1: pt(38, 104), control2: pt(22, 124))
-            veins.move(to: pt(60, 114)); veins.addCurve(to: pt(44, 132), control1: pt(46, 106), control2: pt(32, 120))
-            veins.move(to: pt(60, 114)); veins.addCurve(to: pt(50, 126), control1: pt(50, 108), control2: pt(40, 118))
-            veins.move(to: pt(140, 114)); veins.addCurve(to: pt(156, 140), control1: pt(162, 104), control2: pt(178, 124))
-            veins.move(to: pt(140, 114)); veins.addCurve(to: pt(156, 132), control1: pt(154, 106), control2: pt(168, 120))
-            veins.move(to: pt(140, 114)); veins.addCurve(to: pt(150, 126), control1: pt(150, 108), control2: pt(160, 118))
-            ctx.stroke(veins, with: .color(.white.opacity(0.25)),
-                       style: StrokeStyle(lineWidth: sw(1), lineCap: .round))
+            // soft halo (drawn first — behind head)
+            var haloOuter = Path(); haloOuter.addEllipse(in: ellipseRect(100, 40, 38, 12))
+            ctx.stroke(haloOuter, with: .color(.white.opacity(0.25)), style: StrokeStyle(lineWidth: sw(1.5)))
+            var haloInner = Path(); haloInner.addEllipse(in: ellipseRect(100, 40, 32, 9))
+            ctx.stroke(haloInner, with: .color(.white.opacity(0.6)), style: StrokeStyle(lineWidth: sw(3)))
 
-            // tail
+            // glowing tail with orb tip
             var tail = Path()
-            tail.move(to: pt(108, 182))
-            tail.addCurve(to: pt(40, 168), control1: pt(80, 206), control2: pt(44, 194))
-            tail.addCurve(to: pt(74, 144), control1: pt(36, 146), control2: pt(58, 130))
-            ctx.stroke(tail, with: .color(color),
-                       style: StrokeStyle(lineWidth: sw(10), lineCap: .round))
+            tail.move(to: pt(128, 152))
+            tail.addCurve(to: pt(154, 188), control1: pt(152, 154), control2: pt(164, 174))
+            ctx.stroke(tail, with: .color(color), style: StrokeStyle(lineWidth: sw(9), lineCap: .round))
 
-            // tail tip orb glow
-            var orbGlow = Path()
-            orbGlow.addEllipse(in: ellipseRect(40, 168, 11, 11))
-            ctx.fill(orbGlow, with: .color(color.opacity(0.55)))
-
-            var orbCore = Path()
-            orbCore.addEllipse(in: ellipseRect(40, 168, 6, 6))
+            var orbGlow = Path(); orbGlow.addEllipse(in: ellipseRect(154, 188, 10, 10))
+            ctx.fill(orbGlow, with: .color(color.opacity(0.6)))
+            var orbCore = Path(); orbCore.addEllipse(in: ellipseRect(154, 188, 5.5, 5.5))
             ctx.fill(orbCore, with: .color(.white.opacity(0.5)))
 
-            // body + neck + head
-            var parts = Path()
-            parts.addEllipse(in: ellipseRect(100, 146, 38, 38))
-            parts.addEllipse(in: ellipseRect(100, 96,  15, 26))
-            parts.addEllipse(in: ellipseRect(100, 56,  26, 24))
-            ctx.fill(parts, with: .color(color))
+            // large puff wings
+            var wings = Path()
+            wings.addEllipse(in: ellipseRect(36,  116, 22, 28))
+            wings.addEllipse(in: ellipseRect(164, 116, 22, 28))
+            ctx.fill(wings, with: .color(color.opacity(0.8)))
 
-            // scale grid (most detailed)
-            var shimmer = Path()
-            shimmer.addEllipse(in: ellipseRect(91,  130, 3.5, 3.5))
-            shimmer.addEllipse(in: ellipseRect(109, 130, 3.5, 3.5))
-            shimmer.addEllipse(in: ellipseRect(100, 143, 3.5, 3.5))
-            shimmer.addEllipse(in: ellipseRect(91,  156, 3,   3))
-            shimmer.addEllipse(in: ellipseRect(109, 156, 3,   3))
-            shimmer.addEllipse(in: ellipseRect(100, 168, 3,   3))
-            shimmer.addEllipse(in: ellipseRect(91,  178, 2.5, 2.5))
-            shimmer.addEllipse(in: ellipseRect(109, 178, 2.5, 2.5))
-            ctx.fill(shimmer, with: .color(.white.opacity(0.22)))
+            // soft wing highlights
+            var wingHi = Path()
+            wingHi.move(to: pt(31, 104)); wingHi.addCurve(to: pt(29, 134), control1: pt(25, 112), control2: pt(24, 124))
+            wingHi.move(to: pt(169, 104)); wingHi.addCurve(to: pt(171, 134), control1: pt(175, 112), control2: pt(176, 124))
+            ctx.stroke(wingHi, with: .color(.white.opacity(0.3)), style: StrokeStyle(lineWidth: sw(1.8), lineCap: .round))
 
-            // double horns (tallest)
-            var horns = Path()
-            horns.move(to: pt(92, 34)); horns.addLine(to: pt(87, 12)); horns.addLine(to: pt(92, 3)); horns.addLine(to: pt(96, 12)); horns.closeSubpath()
-            horns.move(to: pt(108, 34)); horns.addLine(to: pt(113, 12)); horns.addLine(to: pt(108, 3)); horns.addLine(to: pt(104, 12)); horns.closeSubpath()
-            ctx.fill(horns, with: .color(color))
+            // rounded ears
+            var ears = Path()
+            ears.addEllipse(in: ellipseRect(80,  66, 13, 18))
+            ears.addEllipse(in: ellipseRect(120, 66, 13, 18))
+            ctx.fill(ears, with: .color(color))
 
-            var hornSheen = Path()
-            hornSheen.move(to: pt(92, 3)); hornSheen.addLine(to: pt(87, 12)); hornSheen.addLine(to: pt(90, 10)); hornSheen.closeSubpath()
-            hornSheen.move(to: pt(108, 3)); hornSheen.addLine(to: pt(113, 12)); hornSheen.addLine(to: pt(110, 10)); hornSheen.closeSubpath()
-            ctx.fill(hornSheen, with: .color(.white.opacity(0.55)))
+            // round chubby body
+            var body = Path()
+            body.addEllipse(in: ellipseRect(100, 118, 48, 47))
+            ctx.fill(body, with: .color(color))
 
-            // sclera
+            // inner ears
+            var innerEars = Path()
+            innerEars.addEllipse(in: ellipseRect(80,  68, 6, 9.5))
+            innerEars.addEllipse(in: ellipseRect(120, 68, 6, 9.5))
+            ctx.fill(innerEars, with: .color(blush.opacity(0.4)))
+
+            // floating sparkle stars
+            var stars = Path()
+            star(&stars, 34, 100, 5)
+            star(&stars, 166, 108, 4.5)
+            star(&stars, 150, 154, 4)
+            ctx.fill(stars, with: .color(.white.opacity(0.45)))
+
+            // belly sparkles
+            var belly = Path()
+            belly.addEllipse(in: ellipseRect(100, 150, 2.5, 2.5))
+            belly.addEllipse(in: ellipseRect(86,  156, 1.8, 1.8))
+            belly.addEllipse(in: ellipseRect(114, 156, 1.8, 1.8))
+            ctx.fill(belly, with: .color(.white.opacity(0.28)))
+
+            // sclera (large & sparkly)
             var sclera = Path()
-            sclera.addEllipse(in: ellipseRect(87,  53, 10, 11))
-            sclera.addEllipse(in: ellipseRect(113, 53, 10, 11))
+            sclera.addEllipse(in: ellipseRect(83,  122, 13.5, 15.5))
+            sclera.addEllipse(in: ellipseRect(117, 122, 13.5, 15.5))
             ctx.fill(sclera, with: .color(.white))
 
             // pupils
-            let pupilColor = Color(red: 0.102, green: 0.114, blue: 0.141)
             var pupils = Path()
-            pupils.addEllipse(in: ellipseRect(89,  54, 6, 7))
-            pupils.addEllipse(in: ellipseRect(115, 54, 6, 7))
-            ctx.fill(pupils, with: .color(pupilColor))
+            pupils.addEllipse(in: ellipseRect(84,  124, 8, 9.5))
+            pupils.addEllipse(in: ellipseRect(116, 124, 8, 9.5))
+            ctx.fill(pupils, with: .color(inkColor))
 
+            // eye highlights (big + small)
             var highlights = Path()
-            highlights.addEllipse(in: ellipseRect(93,  50, 3, 3))
-            highlights.addEllipse(in: ellipseRect(119, 50, 3, 3))
+            highlights.addEllipse(in: ellipseRect(88,  117, 4, 4))
+            highlights.addEllipse(in: ellipseRect(112, 117, 4, 4))
+            highlights.addEllipse(in: ellipseRect(79,  129, 1.9, 1.9))
+            highlights.addEllipse(in: ellipseRect(121, 129, 1.9, 1.9))
             ctx.fill(highlights, with: .color(.white))
+
+            // rosy cheeks
+            var cheeks = Path()
+            cheeks.addEllipse(in: ellipseRect(66,  137, 8, 5.5))
+            cheeks.addEllipse(in: ellipseRect(134, 137, 8, 5.5))
+            ctx.fill(cheeks, with: .color(blush.opacity(0.4)))
+
+            // smile
+            var smile = Path()
+            smile.move(to: pt(91, 140))
+            smile.addQuadCurve(to: pt(109, 140), control: pt(100, 150))
+            ctx.stroke(smile, with: .color(inkColor), style: StrokeStyle(lineWidth: sw(2.8), lineCap: .round))
         }
         .accessibilityIdentifier("aurion-nova")
     }
