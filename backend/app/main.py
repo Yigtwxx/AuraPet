@@ -32,6 +32,14 @@ app = FastAPI(title=settings.app_name, debug=settings.debug, lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    # Özel-ağ IP'lerine (telefon hotspot'u dahil) :3000/:3001 portlarında izin ver,
+    # böylece telefondan http://<IP>:3000 ile erişimde CORS engeli olmaz.
+    allow_origin_regex=(
+        r"http://(localhost|127\.0\.0\.1"
+        r"|10\.\d+\.\d+\.\d+"
+        r"|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+"
+        r"|192\.168\.\d+\.\d+):(3000|3001)"
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
