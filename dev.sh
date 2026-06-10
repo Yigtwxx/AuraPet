@@ -25,6 +25,18 @@ fi
 echo "✅  MongoDB hazır."
 
 # ──────────────────────────────────────────────
+# 1.5 Yarım kalmış dev sunucularını temizle (port çakışmasını önler)
+# ──────────────────────────────────────────────
+for PORT in 8000 3000 3001; do
+  PIDS=$(lsof -ti tcp:$PORT 2>/dev/null || true)
+  if [[ -n "$PIDS" ]]; then
+    echo "🧹  Port $PORT meşgul (PID: $PIDS) — kapatılıyor..."
+    kill $PIDS 2>/dev/null || true
+    sleep 1
+  fi
+done
+
+# ──────────────────────────────────────────────
 # 2. Backend (Python/FastAPI)
 # ──────────────────────────────────────────────
 echo ""
@@ -45,6 +57,7 @@ echo "    Bağımlılıklar kontrol ediliyor..."
 
 "$VENV/bin/uvicorn" app.main:app \
   --reload \
+  --host 0.0.0.0 \
   --port 8000 \
   --app-dir "$REPO/backend" &
 BACKEND_PID=$!
