@@ -9,84 +9,84 @@ struct AurionGlimmerShape: View {
             func ellipseRect(_ cx: CGFloat, _ cy: CGFloat, _ rx: CGFloat, _ ry: CGFloat) -> CGRect { AurionDraw.ellipseRect(cx, cy, rx, ry, size: size) }
             func sw(_ w: CGFloat) -> CGFloat { AurionDraw.strokeWidth(w, size: size) }
 
-            // half-open wings
-            var wings = Path()
-            wings.move(to: pt(68, 128))
-            wings.addCurve(to: pt(58, 148), control1: pt(40, 112), control2: pt(30, 140))
-            wings.addLine(to: pt(68, 140))
-            wings.closeSubpath()
-            wings.move(to: pt(132, 128))
-            wings.addCurve(to: pt(142, 148), control1: pt(160, 112), control2: pt(170, 140))
-            wings.addLine(to: pt(132, 140))
-            wings.closeSubpath()
-            ctx.fill(wings, with: .color(color.opacity(0.85)))
+            let inkColor = Color(red: 0.102, green: 0.114, blue: 0.141)
+            let blush = Color(hex: "#FF8FA3")
 
-            // wing veins
-            var veins = Path()
-            veins.move(to: pt(68, 128))
-            veins.addCurve(to: pt(58, 140), control1: pt(52, 122), control2: pt(44, 136))
-            veins.move(to: pt(132, 128))
-            veins.addCurve(to: pt(142, 140), control1: pt(148, 122), control2: pt(156, 136))
-            ctx.stroke(veins, with: .color(.white.opacity(0.3)),
-                       style: StrokeStyle(lineWidth: sw(1), lineCap: .round))
-
-            // tail
+            // curled tail
             var tail = Path()
-            tail.move(to: pt(100, 180))
-            tail.addCurve(to: pt(56, 172), control1: pt(80, 196), control2: pt(60, 188))
-            tail.addCurve(to: pt(78, 154), control1: pt(52, 156), control2: pt(66, 144))
-            ctx.stroke(tail, with: .color(color),
-                       style: StrokeStyle(lineWidth: sw(9), lineCap: .round))
+            tail.move(to: pt(126, 154))
+            tail.addCurve(to: pt(142, 185), control1: pt(148, 156), control2: pt(157, 177))
+            tail.addCurve(to: pt(128, 171), control1: pt(133, 189), control2: pt(124, 180))
+            ctx.stroke(tail, with: .color(color), style: StrokeStyle(lineWidth: sw(7), lineCap: .round))
 
-            // body + neck + head
-            var parts = Path()
-            parts.addEllipse(in: ellipseRect(100, 148, 32, 34))
-            parts.addEllipse(in: ellipseRect(100, 106, 16, 20))
-            parts.addEllipse(in: ellipseRect(100, 72,  24, 22))
-            ctx.fill(parts, with: .color(color))
+            // puff wings
+            var wings = Path()
+            wings.addEllipse(in: ellipseRect(47,  122, 17, 22))
+            wings.addEllipse(in: ellipseRect(153, 122, 17, 22))
+            ctx.fill(wings, with: .color(color.opacity(0.82)))
 
-            // scale shimmer
-            var shimmer = Path()
-            shimmer.addEllipse(in: ellipseRect(92,  140, 3.5, 3.5))
-            shimmer.addEllipse(in: ellipseRect(108, 140, 3.5, 3.5))
-            shimmer.addEllipse(in: ellipseRect(100, 154, 3,   3))
-            shimmer.addEllipse(in: ellipseRect(93,  166, 2.5, 2.5))
-            shimmer.addEllipse(in: ellipseRect(107, 166, 2.5, 2.5))
-            ctx.fill(shimmer, with: .color(.white.opacity(0.24)))
+            // soft wing highlights
+            var wingHi = Path()
+            wingHi.move(to: pt(44, 114)); wingHi.addCurve(to: pt(42, 132), control1: pt(40, 118), control2: pt(39, 126))
+            wingHi.move(to: pt(156, 114)); wingHi.addCurve(to: pt(158, 132), control1: pt(160, 118), control2: pt(161, 126))
+            ctx.stroke(wingHi, with: .color(.white.opacity(0.3)), style: StrokeStyle(lineWidth: sw(1.5), lineCap: .round))
 
-            // single horn (taller)
-            var horn = Path()
-            horn.move(to: pt(100, 50))
-            horn.addLine(to: pt(96, 32))
-            horn.addLine(to: pt(100, 24))
-            horn.addLine(to: pt(104, 32))
-            horn.closeSubpath()
-            ctx.fill(horn, with: .color(color))
+            // round chubby body
+            var body = Path()
+            body.addEllipse(in: ellipseRect(100, 118, 46, 46))
+            ctx.fill(body, with: .color(color))
 
-            var hornSheen = Path()
-            hornSheen.move(to: pt(100, 24))
-            hornSheen.addLine(to: pt(96, 32))
-            hornSheen.addLine(to: pt(98.5, 30))
-            hornSheen.closeSubpath()
-            ctx.fill(hornSheen, with: .color(.white.opacity(0.55)))
+            // tall spark antenna with glowing tip
+            var antenna = Path()
+            antenna.move(to: pt(100, 74))
+            antenna.addCurve(to: pt(106, 40), control1: pt(99, 58), control2: pt(101, 46))
+            ctx.stroke(antenna, with: .color(color), style: StrokeStyle(lineWidth: sw(5), lineCap: .round))
+
+            var tipGlow = Path(); tipGlow.addEllipse(in: ellipseRect(106, 37, 9, 9))
+            ctx.fill(tipGlow, with: .color(color))
+            var tipCore = Path(); tipCore.addEllipse(in: ellipseRect(106, 37, 4.5, 4.5))
+            ctx.fill(tipCore, with: .color(.white.opacity(0.6)))
+            var tipSpark = Path(); tipSpark.addEllipse(in: ellipseRect(114, 30, 2, 2))
+            ctx.fill(tipSpark, with: .color(.white.opacity(0.7)))
+
+            // belly sparkles
+            var belly = Path()
+            belly.addEllipse(in: ellipseRect(100, 150, 2.5, 2.5))
+            belly.addEllipse(in: ellipseRect(86,  156, 1.8, 1.8))
+            belly.addEllipse(in: ellipseRect(114, 156, 1.8, 1.8))
+            ctx.fill(belly, with: .color(.white.opacity(0.28)))
 
             // sclera
             var sclera = Path()
-            sclera.addEllipse(in: ellipseRect(88,  69, 9,   10))
-            sclera.addEllipse(in: ellipseRect(112, 69, 9,   10))
+            sclera.addEllipse(in: ellipseRect(83,  122, 12.5, 14.5))
+            sclera.addEllipse(in: ellipseRect(117, 122, 12.5, 14.5))
             ctx.fill(sclera, with: .color(.white))
 
             // pupils
-            let pupilColor = Color(red: 0.102, green: 0.114, blue: 0.141)
             var pupils = Path()
-            pupils.addEllipse(in: ellipseRect(90,  70, 5.5, 6.5))
-            pupils.addEllipse(in: ellipseRect(114, 70, 5.5, 6.5))
-            ctx.fill(pupils, with: .color(pupilColor))
+            pupils.addEllipse(in: ellipseRect(84,  124, 7.5, 9))
+            pupils.addEllipse(in: ellipseRect(116, 124, 7.5, 9))
+            ctx.fill(pupils, with: .color(inkColor))
 
+            // eye highlights (big + small)
             var highlights = Path()
-            highlights.addEllipse(in: ellipseRect(93,  66, 2.5, 2.5))
-            highlights.addEllipse(in: ellipseRect(117, 66, 2.5, 2.5))
+            highlights.addEllipse(in: ellipseRect(88,  118, 3.5, 3.5))
+            highlights.addEllipse(in: ellipseRect(112, 118, 3.5, 3.5))
+            highlights.addEllipse(in: ellipseRect(80,  128, 1.7, 1.7))
+            highlights.addEllipse(in: ellipseRect(120, 128, 1.7, 1.7))
             ctx.fill(highlights, with: .color(.white))
+
+            // rosy cheeks
+            var cheeks = Path()
+            cheeks.addEllipse(in: ellipseRect(67,  136, 7.5, 5))
+            cheeks.addEllipse(in: ellipseRect(133, 136, 7.5, 5))
+            ctx.fill(cheeks, with: .color(blush.opacity(0.4)))
+
+            // smile
+            var smile = Path()
+            smile.move(to: pt(92, 140))
+            smile.addQuadCurve(to: pt(108, 140), control: pt(100, 148))
+            ctx.stroke(smile, with: .color(inkColor), style: StrokeStyle(lineWidth: sw(2.5), lineCap: .round))
         }
         .accessibilityIdentifier("aurion-glimmer")
     }
