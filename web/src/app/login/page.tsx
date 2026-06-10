@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@apollo/client";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft, Sparkles, Eye, EyeOff } from "lucide-react";
 import { CREATE_USER } from "@/graphql/operations";
@@ -84,12 +83,7 @@ export default function LoginPage() {
 
         {/* Centered card */}
         <div className="flex-1 flex items-center justify-center px-6 pb-10">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full max-w-[420px]"
-          >
+          <div className="enter w-full max-w-[420px]">
             {/* Title */}
             <div className="text-center mb-7">
               <div className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full text-[11px] bg-[var(--color-brand-soft)] border border-[rgba(139,127,255,0.28)] text-[var(--color-brand-200)]">
@@ -175,7 +169,7 @@ export default function LoginPage() {
               <span className="text-[var(--color-text-tertiary)] underline underline-offset-2 cursor-pointer">Gizlilik</span>
               {" "}politikasını kabul etmiş olursun.
             </p>
-          </motion.div>
+          </div>
         </div>
       </div>
     </main>
