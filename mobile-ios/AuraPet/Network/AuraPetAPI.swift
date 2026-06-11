@@ -20,6 +20,17 @@ final class AuraPetAPI {
         )
     }
 
+    /// Var olan hesaba giriş yapar; web'de oluşturulan hesapla aynı user id'yi
+    /// döndürerek senkronu sağlar. Hesap yoksa `GraphQLError` (USER_NOT_FOUND) atar.
+    func login(username: String) async throws -> UserResponse {
+        try await gql.perform(
+            query: GQLMutation.login,
+            variables: ["username": username],
+            decodingPath: "login",
+            as: UserResponse.self
+        )
+    }
+
     // MARK: Pets
 
     func getUserPets(userId: String) async throws -> [PetResponse] {
