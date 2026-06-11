@@ -99,11 +99,20 @@ FRONTEND_PID=$!
 # 4. Hazır
 # ──────────────────────────────────────────────
 sleep 3
+
+# Telefondan erişim için Mac'in LAN IP'sini bul (bulunamazsa satır gizlenir)
+IFACE=$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')
+LAN_IP=$(ipconfig getifaddr "${IFACE:-en0}" 2>/dev/null || true)
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  ✅  Backend:    http://localhost:8000"
 echo "       GraphiQL:  http://localhost:8000/graphql"
 echo "  ✅  Frontend:   http://localhost:3000"
+if [[ -n "$LAN_IP" ]]; then
+  echo ""
+  echo "  📱  Telefonda:  http://$LAN_IP:3000  (aynı Wi-Fi'da)"
+fi
 echo ""
 echo "  📱  iOS:  Xcode ile mobile-ios/AuraPet/ aç"
 echo "            Detaylar: mobile-ios/AuraPet/README.md"
