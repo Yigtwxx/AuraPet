@@ -19,11 +19,31 @@ struct GraphQLResponse<T: Decodable>: Decodable {
 
 final class AuraGraphQL {
     static let shared = AuraGraphQL()
-    private let url: URL
-    private init() {
-        let raw = Bundle.main.object(forInfoDictionaryKey: "AURAPET_GRAPHQL_URL") as? String
-            ?? "http://localhost:8000/graphql"
-        url = URL(string: raw)!
+
+    /// Simülatörde localhost Mac'e ulaşır. Fiziksel cihazda kullanıcı Ayarlar'dan
+    /// Mac'in LAN adresini (ör. http://192.168.1.42:8000/graphql) girebilir.
+    static let defaultURLString = "http://localhost:8000/graphql"
+    static let serverURLKey = "aurapet_server_url"
+
+    private init() {}
+
+    /// Geçerli her zaman localhost'a çözülen güvenli varsayılan (force-unwrap yok).
+    private static let defaultURL = URL(string: defaultURLString) ?? URL(fileURLWithPath: "/")
+
+    /// Aktif GraphQL adresi. Öncelik: Ayarlar'daki kullanıcı adresi (UserDefaults) →
+    /// Info.plist build ayarı → localhost. Geçersiz/boş değerler atlanır; asla çökmez.
+    private var url: URL {
+        let candidates = [
+            UserDefaults.standard.string(forKey: Self.serverURLKey),
+            Bundle.main.object(forInfoDictionaryKey: "AURAPET_GRAPHQL_URL") as? String,
+        ]
+        for case let raw? in candidates {
+            let trimmed = raw.trimmingCharacters(in: .whitespaces)
+            if !trimmed.isEmpty, let u = URL(string: trimmed), u.scheme != nil {
+                return u
+            }
+        }
+        return Self.defaultURL
     }
 
     /// Ortak istek + GraphQL hata kontrolü; yanıtın `data` düğümünü döndürür.
