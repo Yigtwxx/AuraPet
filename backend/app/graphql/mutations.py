@@ -109,6 +109,35 @@ class Mutation:
 
     @strawberry.mutation(
         description=(
+            "Var olan bir hesaba giriş yapar. Kullanıcı adına göre kullanıcıyı bulur "
+            "ve aynı kimliği (user id) döndürür; böylece web ve mobil aynı hesabı "
+            "ve aynı verileri paylaşır. Hesap bulunamazsa USER_NOT_FOUND hatası verir."
+        )
+    )
+    async def login(self, username: str) -> User:
+        doc = await mongo.db["users"].find_one({"username": username})
+        if doc is None:
+            raise GraphQLError(
+                "Hesap bulunamadı. Önce kayıt olun.",
+                extensions={"code": "USER_NOT_FOUND", "field": "username"},
+            )
+
+        created_at = doc.get("created_at")
+        created_at_iso = (
+            created_at.isoformat()
+            if isinstance(created_at, datetime)
+            else str(created_at)
+        )
+        logger.info("User login: id=%s username=%s", doc["_id"], username)
+        return User(
+            id=strawberry.ID(str(doc["_id"])),
+            username=doc["username"],
+            email=doc["email"],
+            created_at=created_at_iso,
+        )
+
+    @strawberry.mutation(
+        description=(
             "Mevcut bir kullanıcı için yeni bir dijital evcil hayvan oluşturur. "
             "Pet başlangıçta NEUTRAL ruh halinde, 1. seviyede ve 0 XP ile başlar."
         )
