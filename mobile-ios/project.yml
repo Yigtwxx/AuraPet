@@ -16,7 +16,7 @@ settings:
     Debug:
       AURAPET_GRAPHQL_URL: "http://localhost:8000/graphql"
     Release:
-      AURAPET_GRAPHQL_URL: ""
+      AURAPET_GRAPHQL_URL: "http://localhost:8000/graphql"
 packages:
   Lottie:
     url: https://github.com/airbnb/lottie-spm.git
