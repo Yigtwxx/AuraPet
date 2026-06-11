@@ -30,10 +30,10 @@ struct HistoryView: View {
         let now = Date()
         switch timeRange {
         case .week:
-            let cutoff = calendar.date(byAdding: .day, value: -7, to: now)!
+            let cutoff = calendar.date(byAdding: .day, value: -7, to: now) ?? now
             return logs.filter { date(from: $0) >= cutoff }
         case .month:
-            let cutoff = calendar.date(byAdding: .month, value: -1, to: now)!
+            let cutoff = calendar.date(byAdding: .month, value: -1, to: now) ?? now
             return logs.filter { date(from: $0) >= cutoff }
         case .all:
             return logs
