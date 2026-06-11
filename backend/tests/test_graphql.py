@@ -94,6 +94,39 @@ async def test_create_user_returns_id(mutation, mock_mongo_db):
     assert len(str(user.id)) == 24  # ObjectId string length
 
 
+# ── login ──────────────────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_login_existing_user(mutation, mock_mongo_db):
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        created = await mutation.create_user(username="syncuser", email="sync@test.com")
+        user = await mutation.login(username="syncuser")
+
+    assert user.username == "syncuser"
+    assert user.email == "sync@test.com"
+    assert str(user.id) == str(created.id)
+
+
+@pytest.mark.asyncio
+async def test_login_unknown_user_raises(mutation, mock_mongo_db):
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        with pytest.raises(GraphQLError) as exc_info:
+            await mutation.login(username="ghost")
+    assert exc_info.value.extensions["code"] == "USER_NOT_FOUND"
+
+
+@pytest.mark.asyncio
+async def test_login_returns_same_id_as_signup(mutation, mock_mongo_db):
+    """Web kayıt → mobil giriş aynı user id'yi paylaşmalı (senkron garantisi)."""
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        signed_up = await mutation.create_user(username="demo", email="demo@aura.pet")
+        logged_in = await mutation.login(username="demo")
+    assert str(signed_up.id) == str(logged_in.id)
+
+
 # ── create_pet ─────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
