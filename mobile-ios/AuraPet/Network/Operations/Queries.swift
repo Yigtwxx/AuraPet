@@ -45,6 +45,18 @@ enum GQLMutation {
     }
     """
 
+    /// Var olan hesaba giriş — kullanıcı adına göre aynı user id'yi döndürür.
+    /// Böylece web ile mobil aynı hesabı ve aynı verileri paylaşır (senkron).
+    static let login = """
+    mutation Login($username: String!) {
+      login(username: $username) {
+        id
+        username
+        email
+      }
+    }
+    """
+
     static let createPet = """
     mutation CreatePet($userId: ID!, $name: String!) {
       createPet(userId: $userId, name: $name) {
