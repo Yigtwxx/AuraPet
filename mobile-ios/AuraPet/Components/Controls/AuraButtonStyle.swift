@@ -81,10 +81,8 @@ private struct AuraButtonBody: View {
     private var background: AnyShapeStyle {
         switch variant {
         case .primary:
-            return AnyShapeStyle(LinearGradient(
-                colors: [Theme.Colors.brandPrimary, Theme.Colors.brandSecondary],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            ))
+            // Düz marka rengi — gradient/glow yok (web tasarım dili paritesi).
+            return AnyShapeStyle(Theme.Colors.brandPrimary)
         case .secondary:
             return AnyShapeStyle(Theme.Colors.glassStrong)
         case .ghost:
@@ -118,7 +116,7 @@ private struct AuraButtonBody: View {
 
     private var glowColor: Color {
         switch variant {
-        case .primary: return Theme.Colors.brandPrimary.opacity(isPressed ? 0.12 : 0.25)
+        case .primary: return Color.black.opacity(isPressed ? 0.10 : 0.18)
         default:       return .clear
         }
     }
