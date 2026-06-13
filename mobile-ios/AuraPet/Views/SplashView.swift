@@ -40,12 +40,7 @@ struct SplashView: View {
                 VStack(spacing: 12) {
                     Text("AuraPet")
                         .font(Theme.Typography.display)
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [Theme.Colors.textPrimary, Theme.Colors.brandPrimary],
-                                startPoint: .leading, endPoint: .trailing
-                            )
-                        )
+                        .foregroundColor(Theme.Colors.textPrimary)
                         .accessibilityAddTraits(.isHeader)
 
                     Text("Duygularınla evrilen dijital evcil hayvanın")
@@ -70,14 +65,9 @@ struct SplashView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 17)
-                    .background(
-                        LinearGradient(
-                            colors: [Theme.Colors.brandPrimary, Theme.Colors.brandSecondary],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        )
-                    )
+                    .background(Theme.Colors.brandPrimary)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md))
-                    .shadow(color: Theme.Colors.brandPrimary.opacity(0.3), radius: 10, y: 4)
+                    .shadow(color: Color.black.opacity(0.18), radius: 10, y: 4)
                 }
                 .padding(.horizontal, Theme.Spacing.xxl)
                 .opacity(appeared ? 1 : 0)
