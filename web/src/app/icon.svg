@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0"   stop-color="#26A6A0"/>
+    <stop offset="0.5" stop-color="#1E8C87"/>
+    <stop offset="1"   stop-color="#197975"/>
+  </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.32" r="0.7">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="115.2" ry="115.2" fill="url(#g)"/>
+  <rect x="0" y="0" width="512" height="512" rx="115.2" ry="115.2" fill="url(#glow)"/>
+  <g transform="translate(87.03999999999999,87.03999999999999) scale(1.6896)">
+    <!-- hale -->
+    <ellipse cx="100" cy="40" rx="32" ry="9"  fill="none" stroke="#FFFFFF" stroke-width="3"   stroke-opacity="0.65"/>
+    <ellipse cx="100" cy="40" rx="38" ry="12" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-opacity="0.30"/>
+    <!-- kuyruk -->
+    <path d="M128,152 C152,154 164,174 154,188" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="154" cy="188" r="10"  fill="#FFFFFF" fill-opacity="0.65"/>
+    <!-- kanatlar -->
+    <ellipse cx="36"  cy="116" rx="22" ry="28" fill="#FFFFFF" fill-opacity="0.85"/>
+    <ellipse cx="164" cy="116" rx="22" ry="28" fill="#FFFFFF" fill-opacity="0.85"/>
+    <!-- kulaklar -->
+    <ellipse cx="80"  cy="66" rx="13" ry="18" fill="#FFFFFF"/>
+    <ellipse cx="120" cy="66" rx="13" ry="18" fill="#FFFFFF"/>
+    <!-- gövde -->
+    <ellipse cx="100" cy="118" rx="48" ry="47" fill="#FFFFFF"/>
+    <!-- iç kulak -->
+    <ellipse cx="80"  cy="68" rx="6" ry="9.5" fill="#FF8FA3" fill-opacity="0.45"/>
+    <ellipse cx="120" cy="68" rx="6" ry="9.5" fill="#FF8FA3" fill-opacity="0.45"/>
+    <!-- sol göz -->
+    <ellipse cx="83" cy="122" rx="13.5" ry="15.5" fill="#FFFFFF"/>
+    <ellipse cx="84" cy="124" rx="8"    ry="9.5"  fill="#1A1D24"/>
+    <circle  cx="88" cy="117" r="4"   fill="#FFFFFF"/>
+    <!-- sağ göz -->
+    <ellipse cx="117" cy="122" rx="13.5" ry="15.5" fill="#FFFFFF"/>
+    <ellipse cx="116" cy="124" rx="8"    ry="9.5"  fill="#1A1D24"/>
+    <circle  cx="112" cy="117" r="4"   fill="#FFFFFF"/>
+    <!-- yanaklar -->
+    <ellipse cx="66"  cy="137" rx="8" ry="5.5" fill="#FF8FA3" fill-opacity="0.55"/>
+    <ellipse cx="134" cy="137" rx="8" ry="5.5" fill="#FF8FA3" fill-opacity="0.55"/>
+    <!-- gülümseme -->
+    <path d="M91,140 Q100,150 109,140" fill="none" stroke="#1A1D24" stroke-width="2.8" stroke-linecap="round"/>
+  </g>
+</svg>
