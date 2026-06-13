@@ -5,6 +5,33 @@ private enum LoginMode: String, CaseIterable {
     case signIn = "Giriş Yap"
 }
 
+/// Form kuralları — web (login/page.tsx) ile birebir aynı; test edilebilir olsun
+/// diye view'dan ayrı tutulur.
+enum LoginValidation {
+    static func usernameError(_ username: String) -> String? {
+        guard !username.isEmpty else { return nil }
+        return username.count < 2 ? "En az 2 karakter olmalı" : nil
+    }
+
+    static func emailError(_ email: String) -> String? {
+        guard !email.isEmpty else { return nil }
+        let valid = email.contains("@") && email.contains(".")
+        return valid ? nil : "Geçerli bir e-posta girin"
+    }
+
+    /// Gönderimi engelleyen ilk neden; yoksa nil. Girişte yalnızca kullanıcı
+    /// adı gerekir; e-posta yalnızca kayıtta zorunlu.
+    static func firstBlocker(isSignUp: Bool, username: String, email: String) -> String? {
+        if username.isEmpty { return "Kullanıcı adı gerekli" }
+        if let err = usernameError(username) { return err }
+        if isSignUp {
+            if email.isEmpty { return "E-posta gerekli" }
+            if let err = emailError(email) { return err }
+        }
+        return nil
+    }
+}
+
 struct LoginView: View {
     @Binding var isLoggedIn: Bool
     @State private var mode: LoginMode = .signUp
@@ -17,22 +44,11 @@ struct LoginView: View {
     @State private var appeared = false
 
     // Field-level validation
-    private var usernameError: String? {
-        guard !username.isEmpty else { return nil }
-        return username.count < 3 ? "En az 3 karakter olmalı" : nil
-    }
-    private var emailError: String? {
-        guard !email.isEmpty else { return nil }
-        let valid = email.contains("@") && email.contains(".")
-        return valid ? nil : "Geçerli bir e-posta girin"
-    }
-    private var canSubmit: Bool {
-        guard !isLoading, !username.isEmpty, usernameError == nil else { return false }
-        // Girişte yalnızca kullanıcı adı gerekir; e-posta yalnızca kayıtta zorunlu.
-        if mode == .signUp {
-            return !email.isEmpty && emailError == nil
-        }
-        return true
+    private var usernameError: String? { LoginValidation.usernameError(username) }
+    private var emailError: String? { LoginValidation.emailError(email) }
+    /// Gönderimi engelleyen ilk neden; buton ölü görünmek yerine bunu söyler.
+    private var validationMessage: String? {
+        LoginValidation.firstBlocker(isSignUp: mode == .signUp, username: username, email: email)
     }
 
     var body: some View {
@@ -47,12 +63,13 @@ struct LoginView: View {
                     // Brand header
                     brandHeader
 
-                    // Mode picker
+                    // Mode picker — opacity'ye bağlanmaz: SwiftUI'da opacity 0 olan
+                    // görünüm dokunma da almaz; giriş animasyonu aksarsa kontrol
+                    // hem görünmez hem basılamaz kalıyordu.
                     Picker("Mod", selection: $mode) {
                         ForEach(LoginMode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                     }
                     .pickerStyle(.segmented)
-                    .opacity(appeared ? 1 : 0)
                     .animation(Theme.Motion.fast, value: mode)
                     .accessibilityLabel("Giriş modu seçimi")
 
@@ -116,7 +133,7 @@ struct LoginView: View {
                                 submit()
                             }
                             .auraButton(variant: .primary, size: .lg, isLoading: isLoading)
-                            .disabled(!canSubmit)
+                            .disabled(isLoading)
                         }
                     }
                     .opacity(appeared ? 1 : 0)
@@ -148,14 +165,8 @@ struct LoginView: View {
         HStack(spacing: Theme.Spacing.md) {
             ZStack {
                 RoundedRectangle(cornerRadius: Theme.Radius.md)
-                    .fill(
-                        LinearGradient(
-                            colors: [Theme.Colors.brandPrimary, Theme.Colors.brandSecondary],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(Theme.Colors.brandPrimary)
                     .frame(width: 44, height: 44)
-                    .shadow(color: Theme.Colors.brandPrimary.opacity(0.45), radius: 8)
                 AurionSparkShape(color: .white)
                     .frame(width: 28, height: 28)
                     .accessibilityHidden(true)
@@ -177,7 +188,13 @@ struct LoginView: View {
     }
 
     private func submit() {
-        guard canSubmit else { return }
+        guard !isLoading else { return }
+        // Buton her zaman basılabilir; geçersiz formda nedenini söyle (web ile aynı).
+        if let reason = validationMessage {
+            Theme.Haptics.error()
+            errorMessage = reason
+            return
+        }
         isLoading = true
         errorMessage = nil
 
