@@ -46,8 +46,8 @@ def sparkle_points(cx: float, cy: float, outer: float, inner: float) -> list[tup
 
 def main() -> None:
     # 1. Diyagonal marka gradyanı (sol-üst → sağ-alt)
-    c1 = np.array([0x7C, 0x5C, 0xFF], dtype=float)  # brandPrimary
-    c2 = np.array([0x52, 0x36, 0xCC], dtype=float)  # daha derin mor
+    c1 = np.array([0x26, 0xA6, 0xA0], dtype=float)  # brandPrimary (petrol/teal)
+    c2 = np.array([0x14, 0x5F, 0x5C], dtype=float)  # daha derin petrol
     yy, xx = np.mgrid[0:W, 0:W]
     t = ((xx + yy) / (2 * (W - 1)))[..., None]
     bg = (c1 * (1 - t) + c2 * t).astype(np.uint8)
@@ -65,7 +65,7 @@ def main() -> None:
         alpha = int(95 * (1 - i / steps))
         bd.ellipse([cx - rr, cy - rr, cx + rr, cy + rr], fill=alpha)
     bloom = bloom.filter(ImageFilter.GaussianBlur(40))
-    glow_layer = Image.new("RGBA", (W, W), (214, 205, 255, 0))
+    glow_layer = Image.new("RGBA", (W, W), (237, 242, 240, 0))
     glow_layer.putalpha(bloom)
     img = Image.alpha_composite(img, glow_layer)
 
