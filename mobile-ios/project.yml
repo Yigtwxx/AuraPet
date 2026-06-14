@@ -46,6 +46,7 @@ targets:
     scheme:
       testTargets:
         - AuraPetTests
+        - AuraPetUITests
   AuraPetTests:
     type: bundle.unit-test
     platform: iOS
@@ -54,5 +55,15 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.aurapet.AuraPetTests
+    dependencies:
+      - target: AuraPet
+  AuraPetUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: AuraPetUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aurapet.AuraPetUITests
     dependencies:
       - target: AuraPet
