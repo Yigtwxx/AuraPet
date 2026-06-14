@@ -1,13 +1,28 @@
 import SwiftUI
 
+/// Pet adı kuralları — create ve rename'de ortak; test edilebilir olsun diye
+/// view'dan ayrı (LoginValidation kalıbı). Backend de aynı sınırı uygular (1–20).
+enum PetValidation {
+    static let maxNameLength = 20
+
+    /// Trim'lenmiş ada göre hata; geçerliyse nil. Boş veya 20 karakterden uzun reddedilir.
+    /// Backend `.strip()` ile parite için newline dahil tüm boşlukları kırpar.
+    static func nameError(_ name: String) -> String? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return "İsim boş olamaz" }
+        if trimmed.count > maxNameLength { return "En fazla \(maxNameLength) karakter" }
+        return nil
+    }
+
+    static func isValid(_ name: String) -> Bool { nameError(name) == nil }
+}
+
 struct DashboardView: View {
     let userId: String
     @State private var pets: [Pet] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var showAddSheet = false
-    @State private var newPetName = ""
-    @State private var isCreating = false
     @State private var renameTarget: Pet?
     @State private var renameText = ""
     @State private var showRename = false
@@ -130,8 +145,15 @@ struct DashboardView: View {
 
     private func renamePet() {
         guard let pet = renameTarget else { return }
-        let name = renameText.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty, name != pet.name else { renameTarget = nil; return }
+        let name = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Boş / 20+ karakter geçersiz; değişmediyse sessizce kapat (create ile aynı kural).
+        if let err = PetValidation.nameError(renameText) {
+            Theme.Haptics.error()
+            ToastManager.shared.show(err, type: .error)
+            renameTarget = nil
+            return
+        }
+        guard name != pet.name else { renameTarget = nil; return }
         Task {
             do {
                 let resp = try await AuraPetAPI.shared.updatePet(petId: pet.id, name: name)
@@ -223,7 +245,7 @@ private struct AddPetSheet: View {
 
                     Button("Aurion Oluştur") { createPet() }
                         .auraButton(variant: .primary, size: .lg, isLoading: isCreating)
-                        .disabled(petName.trimmingCharacters(in: .whitespaces).isEmpty || petName.count > 20 || isCreating)
+                        .disabled(!PetValidation.isValid(petName) || isCreating)
                 }
                 .padding(Theme.Spacing.xl)
             }
@@ -244,8 +266,8 @@ private struct AddPetSheet: View {
     }
 
     private func createPet() {
-        let name = petName.trimmingCharacters(in: .whitespaces)
-        guard !name.isEmpty, name.count <= 20 else { return }
+        guard PetValidation.isValid(petName) else { return }
+        let name = petName.trimmingCharacters(in: .whitespacesAndNewlines)
         isCreating = true
         errorMessage = nil
 

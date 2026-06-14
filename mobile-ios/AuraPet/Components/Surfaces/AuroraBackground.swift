@@ -30,7 +30,7 @@ struct AuroraBackground: View {
                         )
                         .blur(radius: 40)
 
-                    // Blob 2 — brand purple bottom-right
+                    // Blob 2 — brand teal bottom-right
                     Circle()
                         .fill(
                             RadialGradient(

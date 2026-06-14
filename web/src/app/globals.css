@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Mood palette ────────────────────────────────────────── */
+  /* ── Mood palette (veri rengi — backend colorTheme ile sözleşmeli, DEĞİŞTİRME) ── */
   --color-aura-happy:   #FFD700;
   --color-aura-neutral: #95A5A6;
   --color-aura-sad:     #5B9BD5;
@@ -13,69 +13,63 @@
   --color-sentiment-neutral:  #95A5A6;
 
   /* ── Legacy aliases (geriye dönük uyum) ──────────────────── */
-  --color-aura-bg:     #07080C;
-  --color-aura-panel:  rgba(255,255,255,0.04);
-  --color-aura-text:   #F5F6F8;
-  --color-aura-muted:  #8B92A4;
-  --color-aura-accent: #8B7FFF;
-  --color-aura-border: rgba(255,255,255,0.08);
+  --color-aura-bg:     #0F1514;
+  --color-aura-panel:  rgba(237,242,240,0.04);
+  --color-aura-text:   #EDF2F0;
+  --color-aura-muted:  #8C9893;
+  --color-aura-accent: #26A6A0;
+  --color-aura-border: rgba(237,242,240,0.08);
 
-  /* ── Canvas & surfaces (4-tier depth system) ─────────────── */
-  --color-surface-canvas:    #07080C;
-  --color-surface-base:      #0B0D14;
-  --color-surface-raised:    #11141E;
-  --color-surface-elevated:  #161A28;
-  --color-surface-overlay:   #1D2233;
+  /* ── Canvas & surfaces (petrol kömürü, opak katmanlar) ───── */
+  --color-surface-canvas:    #0F1514;
+  --color-surface-base:      #131918;
+  --color-surface-raised:    #18201E;
+  --color-surface-elevated:  #1D2624;
+  --color-surface-overlay:   #243029;
 
-  /* Glass (tinted, on-canvas) */
-  --color-surface-glass:        rgba(255,255,255,0.035);
-  --color-surface-glass-strong: rgba(255,255,255,0.07);
-  --color-surface-glass-hover:  rgba(255,255,255,0.055);
+  /* Hover/tint yüzeyleri (ad geriye dönük; blur YOK) */
+  --color-surface-glass:        rgba(237,242,240,0.04);
+  --color-surface-glass-strong: rgba(237,242,240,0.07);
+  --color-surface-glass-hover:  rgba(237,242,240,0.06);
 
-  /* ── Borders ─────────────────────────────────────────────── */
-  --color-border-faint:  rgba(255,255,255,0.04);
-  --color-border-subtle: rgba(255,255,255,0.07);
-  --color-border-strong: rgba(255,255,255,0.12);
-  --color-border-vivid:  rgba(255,255,255,0.18);
+  /* ── Borders (hairline) ──────────────────────────────────── */
+  --color-border-faint:  rgba(237,242,240,0.05);
+  --color-border-subtle: rgba(237,242,240,0.08);
+  --color-border-strong: rgba(237,242,240,0.14);
+  --color-border-vivid:  rgba(237,242,240,0.22);
 
   /* ── Text hierarchy ──────────────────────────────────────── */
-  --color-text-primary:   #F5F6F8;
-  --color-text-secondary: #B8BECC;
-  --color-text-tertiary:  #8B92A4;
-  --color-text-faint:     #5A6175;
+  --color-text-primary:   #EDF2F0;
+  --color-text-secondary: #B9C4C0;
+  --color-text-tertiary:  #8C9893;
+  --color-text-faint:     #5E6A66;
 
-  /* ── Brand (refined indigo→violet spectrum) ──────────────── */
-  --color-brand-50:   #EFEDFF;
-  --color-brand-200:  #C9C1FF;
-  --color-brand-400:  #8B7FFF;
-  --color-brand-500:  #7C5CFF;
-  --color-brand-600:  #6644E8;
-  --color-brand-700:  #5135C5;
-  --color-brand-soft: rgba(124,92,255,0.14);
-
-  /* ── Accent (electric cyan) ──────────────────────────────── */
-  --color-accent-cyan: #5EEAD4;
-  --color-accent-pink: #F472B6;
-  --color-accent-amber: #FBBF24;
+  /* ── Brand (petrol / derin teal) ─────────────────────────── */
+  --color-brand-50:   #E9F6F4;
+  --color-brand-200:  #8FD4CF;
+  --color-brand-400:  #26A6A0;
+  --color-brand-500:  #1E8C87;
+  --color-brand-600:  #197975;
+  --color-brand-700:  #145F5C;
+  --color-brand-soft: rgba(38,166,160,0.12);
 
   /* ── Radius scale ────────────────────────────────────────── */
   --radius-xs:   0.375rem;
-  --radius-sm:   0.625rem;
-  --radius-md:   0.875rem;
-  --radius-lg:   1.125rem;
-  --radius-xl:   1.5rem;
-  --radius-2xl:  2rem;
-  --radius-card: 1.25rem;
+  --radius-sm:   0.5rem;
+  --radius-md:   0.625rem;
+  --radius-lg:   0.875rem;
+  --radius-xl:   1rem;
+  --radius-2xl:  1.25rem;
+  --radius-card: 1rem;
   --radius-pill: 9999px;
 
-  /* ── Shadows (3-tier elevation + brand glow) ─────────────── */
-  --shadow-sm:    0 1px 2px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
-  --shadow-md:    0 4px 12px -2px rgba(0,0,0,0.5), 0 2px 6px -1px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
-  --shadow-lg:    0 16px 32px -8px rgba(0,0,0,0.6), 0 4px 12px -4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
-  --shadow-xl:    0 32px 64px -16px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
-  --shadow-glass: 0 8px 24px -8px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
-  --shadow-glow-brand:  0 0 48px -8px rgba(124,92,255,0.55), 0 0 24px -4px rgba(124,92,255,0.35);
-  --shadow-glow-soft:   0 0 32px -8px rgba(124,92,255,0.25);
+  /* ── Shadows (tek nötr katman; renkli glow YOK) ──────────── */
+  --shadow-sm:    0 1px 2px rgba(0,0,0,0.30);
+  --shadow-md:    0 2px 8px -2px rgba(0,0,0,0.35);
+  --shadow-lg:    0 8px 24px -12px rgba(0,0,0,0.45);
+  --shadow-xl:    0 12px 32px -12px rgba(0,0,0,0.50);
+  --shadow-card-hover: 0 4px 14px -6px rgba(0,0,0,0.40);
+  --shadow-popover:    0 16px 40px -12px rgba(0,0,0,0.50), 0 0 0 1px rgba(237,242,240,0.06);
 
   /* ── Semantic status colors ──────────────────────────────── */
   --color-success:         #22c55e;
@@ -91,12 +85,7 @@
   --color-info-soft:       rgba(56,189,248,0.12);
   --color-info-strong:     rgba(56,189,248,0.24);
 
-  /* ── Additional shadows ───────────────────────────────────── */
-  --shadow-card-hover: 0 20px 48px -12px rgba(0,0,0,0.65), 0 4px 12px -4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
-  --shadow-popover:    0 24px 56px -16px rgba(0,0,0,0.7), 0 8px 24px -8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
-
   /* ── Easing ──────────────────────────────────────────────── */
-  --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
   --ease-smooth: cubic-bezier(0.4,0,0.2,1);
   --ease-out:    cubic-bezier(0.16,1,0.3,1);
 
@@ -112,8 +101,8 @@
 }
 
 :root {
-  --background: #07080C;
-  --foreground: #F5F6F8;
+  --background: #0F1514;
+  --foreground: #EDF2F0;
 
   /* Runtime mood theming — set per-page via inline style */
   --mood-active: var(--color-aura-neutral);
@@ -121,46 +110,51 @@
   --mood-glow:   rgba(149,165,166,0.22);
 }
 
-/* ── Light mode overrides ────────────────────────────────── */
+/* ── Light mode overrides (serin kâğıt) ──────────────────── */
 [data-theme="light"] {
-  --background: #F8F7FF;
-  --foreground: #0F0E1A;
+  --background: #F6FAF9;
+  --foreground: #14201D;
 
-  --color-surface-canvas:    #F8F7FF;
+  --color-surface-canvas:    #F6FAF9;
   --color-surface-base:      #FFFFFF;
-  --color-surface-raised:    #F0EEF9;
-  --color-surface-elevated:  #E8E5F5;
-  --color-surface-overlay:   #E0DCF0;
+  --color-surface-raised:    #EDF3F1;
+  --color-surface-elevated:  #E4EDEA;
+  --color-surface-overlay:   #DAE6E2;
 
-  --color-surface-glass:        rgba(255,255,255,0.7);
-  --color-surface-glass-strong: rgba(255,255,255,0.85);
-  --color-surface-glass-hover:  rgba(255,255,255,0.9);
+  --color-surface-glass:        rgba(20,32,29,0.03);
+  --color-surface-glass-strong: rgba(20,32,29,0.05);
+  --color-surface-glass-hover:  rgba(20,32,29,0.045);
 
-  --color-border-faint:  rgba(0,0,0,0.04);
-  --color-border-subtle: rgba(0,0,0,0.08);
-  --color-border-strong: rgba(0,0,0,0.14);
-  --color-border-vivid:  rgba(0,0,0,0.22);
+  --color-border-faint:  rgba(20,32,29,0.05);
+  --color-border-subtle: rgba(20,32,29,0.09);
+  --color-border-strong: rgba(20,32,29,0.15);
+  --color-border-vivid:  rgba(20,32,29,0.24);
 
-  --color-text-primary:   #0F0E1A;
-  --color-text-secondary: #3D3A52;
-  --color-text-tertiary:  #6B677E;
-  --color-text-faint:     #9E9AB0;
+  --color-text-primary:   #14201D;
+  --color-text-secondary: #3D4B47;
+  --color-text-tertiary:  #65736E;
+  --color-text-faint:     #97A4A0;
 
-  --color-aura-bg:     #F8F7FF;
-  --color-aura-text:   #0F0E1A;
-  --color-aura-muted:  #6B677E;
-  --color-aura-border: rgba(0,0,0,0.08);
+  --color-brand-50:   #E9F6F4;
+  --color-brand-200:  #7FBDB8;
+  --color-brand-400:  #14716C;
+  --color-brand-500:  #115C58;
+  --color-brand-600:  #14716C;
+  --color-brand-700:  #0E4C49;
+  --color-brand-soft: rgba(20,113,108,0.10);
 
-  --shadow-sm:    0 1px 3px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04);
-  --shadow-md:    0 4px 12px -2px rgba(0,0,0,0.12), 0 2px 6px -1px rgba(0,0,0,0.06);
-  --shadow-lg:    0 16px 32px -8px rgba(0,0,0,0.15), 0 4px 12px -4px rgba(0,0,0,0.08);
-  --shadow-xl:    0 32px 64px -16px rgba(0,0,0,0.18), 0 8px 24px -8px rgba(0,0,0,0.1);
-  --shadow-glass: 0 8px 24px -8px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
-  --shadow-card-hover: 0 20px 48px -12px rgba(0,0,0,0.18), 0 4px 12px -4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9);
-  --shadow-popover:    0 24px 56px -16px rgba(0,0,0,0.2), 0 8px 24px -8px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+  --color-aura-bg:     #F6FAF9;
+  --color-aura-text:   #14201D;
+  --color-aura-muted:  #65736E;
+  --color-aura-accent: #14716C;
+  --color-aura-border: rgba(20,32,29,0.09);
 
-  --shadow-glow-brand:  0 0 48px -8px rgba(124,92,255,0.3), 0 0 24px -4px rgba(124,92,255,0.2);
-  --shadow-glow-soft:   0 0 32px -8px rgba(124,92,255,0.15);
+  --shadow-sm:    0 1px 2px rgba(20,32,29,0.08);
+  --shadow-md:    0 2px 8px -2px rgba(20,32,29,0.08);
+  --shadow-lg:    0 8px 24px -12px rgba(20,32,29,0.14);
+  --shadow-xl:    0 12px 32px -12px rgba(20,32,29,0.16);
+  --shadow-card-hover: 0 4px 14px -6px rgba(20,32,29,0.10);
+  --shadow-popover:    0 16px 40px -12px rgba(20,32,29,0.16), 0 0 0 1px rgba(20,32,29,0.05);
 }
 
 @theme inline {
@@ -174,6 +168,8 @@
 html {
   scroll-behavior: smooth;
   font-feature-settings: "cv02","cv03","cv04","cv11","ss01";
+  /* PWA standalone modunda notch/overscroll çevresinde beyaz flash olmasın */
+  background: var(--background);
 }
 
 body {
@@ -190,132 +186,51 @@ code, pre {
 }
 
 /* Selection */
-::selection { background: rgba(124,92,255,0.35); color: #fff; }
+::selection { background: rgba(38,166,160,0.35); color: #fff; }
 
-/* ── Premium scrollbar ─────────────────────────────────── */
+/* ── Scrollbar ───────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.08);
+  background: rgba(237,242,240,0.10);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(237,242,240,0.18); background-clip: padding-box; }
 
-/* ── Keyframes ───────────────────────────────────────────── */
-@keyframes aurora-drift-1 {
-  0%, 100% { transform: translate(0%, 0%) scale(1); }
-  33%      { transform: translate(6%, -8%) scale(1.12); }
-  66%      { transform: translate(-5%, 6%) scale(0.94); }
-}
-@keyframes aurora-drift-2 {
-  0%, 100% { transform: translate(0%, 0%) scale(1); }
-  25%      { transform: translate(-7%, 7%) scale(1.06); }
-  75%      { transform: translate(8%, -5%) scale(0.97); }
-}
-@keyframes aurora-drift-3 {
-  0%, 100% { transform: translate(0%, 0%) scale(1); }
-  50%      { transform: translate(4%, 8%) scale(1.09); }
-}
-
-@keyframes shimmer {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(200%); }
-}
-
-@keyframes shimmer-button {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes border-beam {
-  0%   { offset-distance: 0%; }
-  100% { offset-distance: 100%; }
-}
-
-@keyframes float-soft {
-  0%, 100% { transform: translateY(0px); }
-  50%      { transform: translateY(-6px); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.45; transform: scale(1); }
-  50%      { opacity: 0.7;  transform: scale(1.04); }
-}
-
-@keyframes grid-pan {
-  0%   { background-position: 0% 0%; }
-  100% { background-position: 40px 40px; }
-}
-
-@keyframes spin-slow {
-  to { transform: rotate(360deg); }
-}
-
-/* ── Utility helpers ─────────────────────────────────────── */
-.noise-overlay {
-  position: absolute; inset: 0;
-  pointer-events: none;
-  opacity: 0.035;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/></svg>");
-}
-
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-.dot-bg {
-  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-/* Gradient text helper */
-.gradient-text {
-  background: linear-gradient(135deg, #F5F6F8 0%, #C9C1FF 55%, #8B7FFF 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-
-.gradient-text-vivid {
-  background: linear-gradient(135deg, #8B7FFF 0%, #F472B6 50%, #5EEAD4 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-
-/* ── Entrance animations (CSS-driven; görünürlük JS'e bağlı DEĞİL) ──
+/* ── Entrance animation (CSS-driven; görünürlük JS'e bağlı DEĞİL) ──
    `fill-mode: both` sayesinde animasyon desteklenmese bile öğe doğal
-   opacity:1'de görünür kalır. Gecikme inline `style={{animationDelay}}` ile. */
+   opacity:1'de görünür kalır. */
 @keyframes enter-fade-up {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes enter-pop {
-  from { opacity: 0; transform: scale(0.85); }
-  to   { opacity: 1; transform: scale(1); }
+.enter { animation: enter-fade-up 0.22s var(--ease-out) both; }
+
+/* Maskotun sakin salınımı (landing + boş durumlar) */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
 }
-.enter     { animation: enter-fade-up 0.6s var(--ease-out) both; }
-.enter-pop { animation: enter-pop 0.6s var(--ease-out) both; }
+
+/* XP bar parlama süpürmesi */
+@keyframes shimmer {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(320%); }
+}
 
 /* Focus ring */
 .focus-ring:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px rgba(124,92,255,0.55);
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px color-mix(in srgb, var(--color-brand-400) 65%, transparent);
 }
 
 /* Display font (Instrument Serif) */
 .font-display {
   font-family: var(--font-display);
   font-weight: 400;
-  font-style: italic;
+  font-style: normal;
   letter-spacing: -0.02em;
 }
 
@@ -333,6 +248,8 @@ code, pre {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    /* Gecikme de sıfırlanmalı; yoksa .enter içerikleri delay boyunca görünmez kalır */
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
@@ -340,14 +257,14 @@ code, pre {
 
 /* Light mode — scrollbar */
 [data-theme="light"]::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.12);
+  background: rgba(20,32,29,0.14);
 }
 [data-theme="light"]::-webkit-scrollbar-thumb:hover {
-  background: rgba(0,0,0,0.22);
+  background: rgba(20,32,29,0.24);
 }
 
 /* Light mode — selection */
 [data-theme="light"] ::selection {
-  background: rgba(124,92,255,0.25);
-  color: #0F0E1A;
+  background: rgba(20,113,108,0.22);
+  color: #14201D;
 }

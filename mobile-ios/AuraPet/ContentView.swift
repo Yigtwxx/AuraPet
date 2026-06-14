@@ -13,11 +13,18 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // NavigationStack her dalın İÇİNDE: isLoggedIn değişince auth alt-ağacı
+        // (push'lu LoginView dahil) komple yıkılır. Stack dışta olursa push'lu
+        // LoginView tepede takılı kalıp kullanıcıyı login ekranında kilitliyordu.
+        Group {
             if isLoggedIn, let uid = Session.shared.userId {
-                MainTabView(userId: uid, isLoggedIn: $isLoggedIn)
+                NavigationStack {
+                    MainTabView(userId: uid, isLoggedIn: $isLoggedIn)
+                }
             } else {
-                SplashView(isLoggedIn: $isLoggedIn)
+                NavigationStack {
+                    SplashView(isLoggedIn: $isLoggedIn)
+                }
             }
         }
         .preferredColorScheme(preferredColorScheme)

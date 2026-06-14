@@ -82,5 +82,5 @@ struct AurionSparkShape: View {
         AurionSparkShape(color: Color(hex: "#9B59B6")).frame(width: 120, height: 120)
     }
     .padding()
-    .background(Color(hex: "#0F1115"))
+    .background(Color(hex: "#0F1514"))
 }

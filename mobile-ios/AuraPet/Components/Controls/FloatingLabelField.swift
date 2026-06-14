@@ -58,6 +58,7 @@ struct FloatingLabelField: View {
             }
         }
         .focused($focused)
+        .accessibilityIdentifier(label)   // UI testleri alanı label'a göre bulur (inert)
         .padding(.horizontal, Theme.Spacing.lg)
         .padding(.top, isActive ? 20 : 0)
         .padding(.bottom, isActive ? 4 : 0)

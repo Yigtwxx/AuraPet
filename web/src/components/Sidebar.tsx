@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { clearUserId, getUserId } from "@/lib/session";
+import { clearUserId, getUserId, getUsername } from "@/lib/session";
 import { LayoutDashboard, PenLine, ScrollText, LogOut, Sparkles, Command } from "lucide-react";
 import ThemeToggle from "./ui/ThemeToggle";
 import { useCommandPalette } from "./ui/CommandPalette";
@@ -19,20 +19,13 @@ const navItems = [
 function BrandMark() {
   return (
     <div className="mb-8 px-2 flex items-center gap-3">
-      <div className="relative">
-        <div
-          className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 relative overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #7C5CFF 0%, #8B7FFF 50%, #6644E8 100%)",
-            boxShadow: "0 6px 20px -4px rgba(124,92,255,0.5), inset 0 1px 0 rgba(255,255,255,0.2)",
-          }}
-        >
-          <Sparkles size={14} className="text-white relative z-10" strokeWidth={2.4} />
-          <span aria-hidden className="absolute inset-0 opacity-60" style={{ background: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.45), transparent 55%)" }} />
-        </div>
-        <span aria-hidden className="absolute -inset-1 rounded-xl opacity-50 [filter:blur(8px)]" style={{ background: "radial-gradient(circle, rgba(139,127,255,0.5), transparent 70%)", animation: "pulse-glow 3.6s ease-in-out infinite" }} />
+      <div
+        className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
+        style={{ background: "var(--color-brand-400)" }}
+      >
+        <Sparkles size={14} className="text-white" strokeWidth={2.4} />
       </div>
-      <p className="font-bold text-[15px] tracking-tight gradient-text leading-none">AuraPet</p>
+      <p className="font-display text-[17px] tracking-tight text-[var(--color-text-primary)] leading-none">AuraPet</p>
     </div>
   );
 }
@@ -42,10 +35,13 @@ function NavContent({ onNavClick }: { onNavClick?: () => void }) {
   const router = useRouter();
   const { open, setOpen, close } = useCommandPalette();
   const userId = getUserId();
+  const username = getUsername();
+  const initial = (username?.trim()?.[0] ?? "A").toUpperCase();
 
   function handleLogout() {
     clearUserId();
-    router.push("/");
+    // Komut paletiyle tutarlı: doğrudan giriş formuna dön.
+    router.push("/login");
   }
 
   return (
@@ -77,15 +73,14 @@ function NavContent({ onNavClick }: { onNavClick?: () => void }) {
                   layoutId="active-pill"
                   className="absolute inset-0 rounded-xl"
                   style={{
-                    background: "linear-gradient(135deg, rgba(124,92,255,0.2) 0%, rgba(155,89,182,0.08) 100%)",
-                    border: "1px solid rgba(139,127,255,0.28)",
-                    boxShadow: "0 8px 24px -10px rgba(124,92,255,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    background: "var(--color-brand-soft)",
+                    border: "1px solid rgba(38,166,160,0.28)",
                   }}
                   transition={{ type: "spring", stiffness: 400, damping: 34 }}
                 />
               )}
               {!active && (
-                <span aria-hidden className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--duration-fast)]" style={{ background: "rgba(255,255,255,0.03)" }} />
+                <span aria-hidden className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--duration-fast)]" style={{ background: "var(--color-surface-glass)" }} />
               )}
               <Icon
                 size={16}
@@ -125,9 +120,9 @@ function NavContent({ onNavClick }: { onNavClick?: () => void }) {
         {userId && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--color-surface-glass)] border border-[var(--color-border-faint)]">
             <div className="h-6 w-6 rounded-full bg-[var(--color-brand-soft)] flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-semibold text-[var(--color-brand-400)]">A</span>
+              <span className="text-[10px] font-semibold text-[var(--color-brand-400)]">{initial}</span>
             </div>
-            <span className="flex-1 text-[11px] text-[var(--color-text-tertiary)] truncate">Hesabın</span>
+            <span className="flex-1 text-[11px] text-[var(--color-text-tertiary)] truncate">{username ?? "Hesabın"}</span>
             <button
               onClick={handleLogout}
               aria-label="Çıkış yap"
@@ -148,12 +143,10 @@ export default function Sidebar({ drawerOpen = false, onClose }: { drawerOpen?: 
       <aside
         className="hidden md:flex w-[240px] shrink-0 flex-col min-h-screen py-7 px-3 relative"
         style={{
-          background: "linear-gradient(180deg, rgba(13,15,22,0.65) 0%, rgba(7,8,12,0.9) 100%)",
-          borderRight: "1px solid var(--color-border-faint)",
-          backdropFilter: "blur(24px) saturate(1.4)",
+          background: "var(--color-surface-base)",
+          borderRight: "1px solid var(--color-border-subtle)",
         }}
       >
-        <div aria-hidden className="pointer-events-none absolute -top-20 -right-10 h-48 w-48 rounded-full opacity-20 [filter:blur(60px)]" style={{ background: "#7C5CFF" }} />
         <div className="relative flex flex-col flex-1">
           <NavContent />
         </div>
@@ -166,7 +159,7 @@ export default function Sidebar({ drawerOpen = false, onClose }: { drawerOpen?: 
               key="backdrop"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-0 bg-black/70 z-40 backdrop-blur-sm"
+              className="md:hidden fixed inset-0 bg-black/60 z-40"
               onClick={onClose}
               aria-hidden="true"
             />
@@ -175,7 +168,7 @@ export default function Sidebar({ drawerOpen = false, onClose }: { drawerOpen?: 
               initial={{ x: -260 }} animate={{ x: 0 }} exit={{ x: -260 }}
               transition={{ type: "spring", stiffness: 360, damping: 34 }}
               className="md:hidden fixed left-0 top-0 h-full w-[240px] z-50 flex flex-col py-7 px-3"
-              style={{ background: "rgba(11,13,20,0.97)", borderRight: "1px solid var(--color-border-subtle)", backdropFilter: "blur(28px)" }}
+              style={{ background: "var(--color-surface-base)", borderRight: "1px solid var(--color-border-subtle)" }}
               aria-label="Navigasyon menüsü"
             >
               <NavContent onNavClick={onClose} />

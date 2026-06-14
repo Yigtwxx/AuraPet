@@ -5,14 +5,12 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@apollo/client";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft, Sparkles, Eye, EyeOff } from "lucide-react";
-import { CREATE_USER } from "@/graphql/operations";
-import { setUserId } from "@/lib/session";
+import { CREATE_USER, LOGIN } from "@/graphql/operations";
+import { setUserId, setUsername as persistUsername } from "@/lib/session";
 import { useToast } from "@/components/ui/Toast";
-import AuroraCanvas from "@/components/ui/AuroraCanvas";
 import GridPattern from "@/components/ui/GridPattern";
 import NoiseOverlay from "@/components/ui/NoiseOverlay";
 import Card from "@/components/ui/Card";
-import BorderBeam from "@/components/ui/BorderBeam";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { cn } from "@/lib/cn";
@@ -29,16 +27,30 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<"username" | "email" | "password", string>>>({});
 
-  const [createUser, { loading }] = useMutation(CREATE_USER);
+  const [createUser, { loading: creating }] = useMutation(CREATE_USER);
+  const [login, { loading: loggingIn }] = useMutation(LOGIN);
+  const loading = creating || loggingIn;
+
+  function switchMode(m: Mode) {
+    setMode(m);
+    setErrors({});
+    // Mod değişiminde hassas alanları temizle (gizlilik + temiz başlangıç).
+    setEmail("");
+    setPassword("");
+  }
 
   function validate() {
     const e: typeof errors = {};
     if (!username.trim()) e.username = "Kullanıcı adı gerekli";
     else if (username.length < 2) e.username = "En az 2 karakter olmalı";
-    if (!email.trim()) e.email = "E-posta gerekli";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "Geçerli bir e-posta gir";
-    if (!password.trim()) e.password = "Şifre gerekli";
-    else if (password.length < 6) e.password = "En az 6 karakter olmalı";
+    // E-posta ve şifre yalnızca kayıt olurken zorunludur; girişte kullanıcı
+    // adına göre var olan hesap bulunur.
+    if (mode === "signup") {
+      if (!email.trim()) e.email = "E-posta gerekli";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "Geçerli bir e-posta gir";
+      if (!password.trim()) e.password = "Şifre gerekli";
+      else if (password.length < 6) e.password = "En az 6 karakter olmalı";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -47,22 +59,37 @@ export default function LoginPage() {
     e.preventDefault();
     if (!validate()) return;
     try {
-      const { data } = await createUser({
-        variables: { username: username.trim(), email: email.trim() },
-      });
-      setUserId(data.createUser.id);
+      if (mode === "signup") {
+        const { data } = await createUser({
+          variables: { username: username.trim(), email: email.trim() },
+        });
+        setUserId(data.createUser.id);
+        persistUsername(data.createUser.username);
+      } else {
+        const { data } = await login({
+          variables: { username: username.trim() },
+        });
+        setUserId(data.login.id);
+        persistUsername(data.login.username);
+      }
       router.push("/dashboard");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Bir hata oluştu";
-      if (msg.toLowerCase().includes("username")) setErrors((p) => ({ ...p, username: "Bu kullanıcı adı alınmış" }));
-      else if (msg.toLowerCase().includes("email")) setErrors((p) => ({ ...p, email: "Bu e-posta zaten kayıtlı" }));
-      else showToast(msg, "error");
+      const lower = msg.toLowerCase();
+      if (mode === "login" && (lower.includes("bulunamadı") || lower.includes("not_found"))) {
+        setErrors((p) => ({ ...p, username: "Hesap bulunamadı. Önce kayıt ol." }));
+      } else if (lower.includes("username") || lower.includes("kullanıcı adı")) {
+        setErrors((p) => ({ ...p, username: "Bu kullanıcı adı alınmış" }));
+      } else if (lower.includes("email") || lower.includes("e-posta")) {
+        setErrors((p) => ({ ...p, email: "Bu e-posta zaten kayıtlı" }));
+      } else {
+        showToast(msg, "error");
+      }
     }
   }
 
   return (
     <main className="relative min-h-screen overflow-hidden flex" style={{ background: "var(--background)" }}>
-      <AuroraCanvas intensity={0.65} />
       <GridPattern size={48} opacity={0.04} fadeEdges />
       <NoiseOverlay opacity={0.04} />
 
@@ -74,7 +101,7 @@ export default function LoginPage() {
             Ana sayfa
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-[9px] flex items-center justify-center" style={{ background: "linear-gradient(135deg,#7C5CFF 0%,#8B7FFF 50%,#6644E8 100%)", boxShadow: "0 4px 14px -2px rgba(124,92,255,0.5)" }}>
+            <div className="w-8 h-8 rounded-[9px] flex items-center justify-center" style={{ background: "var(--color-brand-400)" }}>
               <Sparkles size={14} className="text-white" strokeWidth={2.4} />
             </div>
             <span className="font-bold text-[14px] text-[var(--color-text-primary)]">AuraPet</span>
@@ -86,16 +113,18 @@ export default function LoginPage() {
           <div className="enter w-full max-w-[420px]">
             {/* Title */}
             <div className="text-center mb-7">
-              <div className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full text-[11px] bg-[var(--color-brand-soft)] border border-[rgba(139,127,255,0.28)] text-[var(--color-brand-200)]">
+              <div className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-full text-[11px] bg-[var(--color-brand-soft)] border border-[rgba(38,166,160,0.28)] text-[var(--color-brand-200)]">
                 <span className="inline-block h-1 w-1 rounded-full bg-[var(--color-brand-400)]" />
                 <span className="font-semibold tracking-wide uppercase">Hoş Geldin</span>
               </div>
-              <h1 className="text-[28px] font-bold tracking-tight leading-tight mb-2">
-                <span className="gradient-text">Aurion'una</span>{" "}
-                <span className="text-[var(--color-text-primary)]">başla</span>
+              <h1 className="font-display text-[30px] tracking-tight leading-tight mb-2 text-[var(--color-text-primary)]">
+                <em className="italic text-[var(--color-brand-400)]">Aurion&apos;una</em>{" "}
+                başla
               </h1>
               <p className="text-[13px] text-[var(--color-text-tertiary)] max-w-xs mx-auto leading-relaxed">
-                Birkaç saniye içinde hesabını oluştur ve ilk Aurion'unu keşfet.
+                {mode === "signup"
+                  ? "Birkaç saniye içinde hesabını oluştur ve ilk Aurion'unu keşfet."
+                  : "Kullanıcı adınla giriş yap — Aurion'ların ve günlüklerin seni bekliyor."}
               </p>
             </div>
 
@@ -104,7 +133,8 @@ export default function LoginPage() {
               {(["signup", "login"] as const).map((m) => (
                 <button
                   key={m}
-                  onClick={() => setMode(m)}
+                  type="button"
+                  onClick={() => switchMode(m)}
                   className={cn(
                     "flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-[var(--duration-fast)]",
                     mode === m
@@ -120,7 +150,6 @@ export default function LoginPage() {
             {/* Card */}
             <div className="relative">
               <Card variant="elevated" padding="lg" className="relative">
-                <BorderBeam size={180} duration={10} />
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4 relative" noValidate>
                   <Input
                     label="Kullanıcı Adı"
@@ -130,15 +159,17 @@ export default function LoginPage() {
                     autoComplete="username"
                     errorText={errors.username}
                   />
-                  <Input
-                    label="E-posta"
-                    floating
-                    type="email"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })); }}
-                    autoComplete="email"
-                    errorText={errors.email}
-                  />
+                  {mode === "signup" && (
+                    <Input
+                      label="E-posta"
+                      floating
+                      type="email"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })); }}
+                      autoComplete="email"
+                      errorText={errors.email}
+                    />
+                  )}
                   <Input
                     label="Şifre"
                     floating
@@ -161,12 +192,12 @@ export default function LoginPage() {
               </Card>
             </div>
 
-            {/* Legal */}
+            {/* Legal — bilgilendirme metni (web'de ayrı politika sayfası yok) */}
             <p className="text-center text-[11px] text-[var(--color-text-faint)] mt-5 leading-relaxed">
               Devam ederek{" "}
-              <span className="text-[var(--color-text-tertiary)] underline underline-offset-2 cursor-pointer">Kullanım Şartları</span>
+              <span className="text-[var(--color-text-tertiary)]">Kullanım Şartları</span>
               {" "}ve{" "}
-              <span className="text-[var(--color-text-tertiary)] underline underline-offset-2 cursor-pointer">Gizlilik</span>
+              <span className="text-[var(--color-text-tertiary)]">Gizlilik</span>
               {" "}politikasını kabul etmiş olursun.
             </p>
           </div>

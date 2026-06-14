@@ -107,7 +107,7 @@ struct LoginView: View {
                                     label: "Şifre",
                                     text: $password,
                                     isSecure: !showPassword,
-                                    helperText: mode == .signUp ? "En az 8 karakter" : nil
+                                    helperText: mode == .signUp ? "En az 6 karakter" : nil
                                 )
                                 .accessibilityLabel("Şifre")
 
@@ -209,7 +209,10 @@ struct LoginView: View {
                 }
                 Session.shared.userId = user.id
                 Theme.Haptics.success()
-                await MainActor.run { isLoggedIn = true }
+                await MainActor.run {
+                    isLoading = false
+                    isLoggedIn = true
+                }
             } catch {
                 Theme.Haptics.error()
                 await MainActor.run {

@@ -1,53 +1,44 @@
 "use client";
 
 import { useState } from "react";
+import { Menu } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
+import GridPattern from "@/components/ui/GridPattern";
+import NoiseOverlay from "@/components/ui/NoiseOverlay";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div
-      className="flex min-h-screen"
-      style={{ background: "var(--background)" }}
-    >
-      <Sidebar drawerOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
+    <div className="relative flex min-h-screen overflow-hidden" style={{ background: "var(--background)" }}>
+      <GridPattern size={48} opacity={0.025} fadeEdges />
+      <NoiseOverlay opacity={0.03} />
 
-      <div className="flex-1 flex flex-col min-w-0 relative">
-        {/* Mobile top bar */}
-        <header
-          className="md:hidden flex items-center gap-3 px-4 py-3 shrink-0 sticky top-0 z-20"
-          style={{
-            background: "rgba(10,11,15,0.8)",
-            borderBottom: "1px solid var(--color-border-subtle)",
-            backdropFilter: "blur(16px)",
-          }}
-        >
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="p-1.5 rounded-lg text-aura-muted hover:text-aura-text hover:bg-white/5 transition-colors"
-            aria-label="Menüyü aç"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <rect y="3" width="20" height="2" rx="1" fill="currentColor" />
-              <rect y="9" width="14" height="2" rx="1" fill="currentColor" />
-              <rect y="15" width="20" height="2" rx="1" fill="currentColor" />
-            </svg>
-          </button>
-          <span
-            className="font-bold text-base"
-            style={{
-              background: "linear-gradient(135deg, #E8EAED 30%, #7C5CFF)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            AuraPet
-          </span>
-        </header>
+      <div className="relative z-10 flex w-full min-h-screen">
+        <Sidebar drawerOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">{children}</main>
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile top bar */}
+          <header
+            className="md:hidden flex items-center justify-between gap-3 px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] shrink-0 sticky top-0 z-20"
+            style={{ background: "var(--color-surface-canvas)", borderBottom: "1px solid var(--color-border-subtle)" }}
+          >
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="p-2 rounded-lg text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-glass)] transition-colors"
+              aria-label="Menüyü aç"
+            >
+              <Menu size={18} aria-hidden />
+            </button>
+            <span className="font-display text-[17px] text-[var(--color-text-primary)]">AuraPet</span>
+            <ThemeToggle />
+          </header>
+
+          <main className="flex-1 px-5 pt-6 md:px-10 md:pt-10 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] md:pb-[calc(env(safe-area-inset-bottom,0px)+2.5rem)] overflow-y-auto" id="main-content">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );
