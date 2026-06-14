@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime, timezone
 
 import strawberry
@@ -16,6 +17,49 @@ from app.models.pet import PetDocument
 from app.services.ai import MOOD_COLORS, sentiment_service
 
 logger = logging.getLogger(__name__)
+
+# ── Girdi doğrulama ────────────────────────────────────────────────────────
+# Backend otoriter doğrulamadır: UI'ı atlayan istemciler de boş/aşırı uzun/
+# geçersiz veri gönderemesin. Frontend kuralları (web login/page.tsx) ile uyumlu.
+
+_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+def _clean_required(
+    value: str, *, field: str, label: str, min_len: int = 1, max_len: int
+) -> str:
+    """Metni trim'ler ve doğrular; geçersizse temiz bir INVALID_INPUT hatası verir."""
+    text = (value or "").strip()
+    if len(text) < min_len:
+        msg = (
+            f"{label} boş olamaz."
+            if min_len <= 1
+            else f"{label} en az {min_len} karakter olmalı."
+        )
+        raise GraphQLError(msg, extensions={"code": "INVALID_INPUT", "field": field})
+    if len(text) > max_len:
+        raise GraphQLError(
+            f"{label} en fazla {max_len} karakter olabilir.",
+            extensions={"code": "INVALID_INPUT", "field": field},
+        )
+    return text
+
+
+def _clean_email(value: str) -> str:
+    """E-postayı trim'ler ve formatını doğrular."""
+    email = (value or "").strip()
+    if not email:
+        raise GraphQLError(
+            "E-posta boş olamaz.",
+            extensions={"code": "INVALID_INPUT", "field": "email"},
+        )
+    if not _EMAIL_RE.match(email):
+        raise GraphQLError(
+            "Geçerli bir e-posta adresi girin.",
+            extensions={"code": "INVALID_INPUT", "field": "email"},
+        )
+    return email
+
 
 # ── XP / Level sistemi ─────────────────────────────────────────────────────
 
@@ -64,6 +108,10 @@ class Mutation:
         )
     )
     async def create_user(self, username: str, email: str) -> User:
+        username = _clean_required(
+            username, field="username", label="Kullanıcı adı", min_len=2, max_len=20
+        )
+        email = _clean_email(email)
         existing = await mongo.db["users"].find_one(
             {"$or": [{"username": username}, {"email": email}]},
             {"username": 1, "email": 1},
@@ -115,6 +163,9 @@ class Mutation:
         )
     )
     async def login(self, username: str) -> User:
+        username = _clean_required(
+            username, field="username", label="Kullanıcı adı", min_len=1, max_len=50
+        )
         doc = await mongo.db["users"].find_one({"username": username})
         if doc is None:
             raise GraphQLError(
@@ -143,6 +194,7 @@ class Mutation:
         )
     )
     async def create_pet(self, user_id: strawberry.ID, name: str) -> Pet:
+        name = _clean_required(name, field="name", label="Aurion adı", min_len=1, max_len=20)
         doc = {
             "user_id": str(user_id),
             "name": name,
@@ -170,6 +222,7 @@ class Mutation:
         )
     )
     async def update_pet(self, pet_id: strawberry.ID, name: str) -> Pet:
+        name = _clean_required(name, field="name", label="Aurion adı", min_len=1, max_len=20)
         try:
             pet_oid = ObjectId(str(pet_id))
         except Exception as exc:
@@ -236,6 +289,12 @@ class Mutation:
         entry_text: str,
         pet_id: strawberry.ID | None = strawberry.UNSET,
     ) -> LogAnalysisResult:
+        # Girdi doğrulama: boş/whitespace veya aşırı uzun metni reddet (REST /analyze
+        # ile aynı 2000 sınırı — modeli/DB'yi şişmeden korur).
+        entry_text = _clean_required(
+            entry_text, field="entryText", label="Günlük metni", min_len=1, max_len=2000
+        )
+
         # Guard: model hazır değilse anlamlı bir hata döndür
         if not sentiment_service.is_loaded:
             raise GraphQLError(
