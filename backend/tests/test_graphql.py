@@ -492,3 +492,97 @@ async def test_get_logs_only_own_logs(query, mock_mongo_db):
 
     assert len(logs) == 1
     assert logs[0].entry_text == "Mine."
+
+
+# ── Girdi doğrulama (INVALID_INPUT) ────────────────────────────────────────
+# Backend otoriter doğrulama: UI'ı atlayan istemciler boş/aşırı/geçersiz veri
+# gönderemez. Doğrulama her resolver'ın ilk satırıdır → DB/model'e hiç ulaşmaz.
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad", ["", "   ", "\t\n", "a"])
+async def test_create_user_rejects_invalid_username(mutation, bad):
+    with pytest.raises(GraphQLError) as exc:
+        await mutation.create_user(username=bad, email="ok@test.com")
+    assert exc.value.extensions["code"] == "INVALID_INPUT"
+    assert exc.value.extensions["field"] == "username"
+
+
+@pytest.mark.asyncio
+async def test_create_user_rejects_too_long_username(mutation):
+    with pytest.raises(GraphQLError) as exc:
+        await mutation.create_user(username="x" * 21, email="ok@test.com")
+    assert exc.value.extensions["code"] == "INVALID_INPUT"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad", ["", "  ", "notanemail", "missing@dot", "@nope.com", "a@b"])
+async def test_create_user_rejects_invalid_email(mutation, bad):
+    with pytest.raises(GraphQLError) as exc:
+        await mutation.create_user(username="validname", email=bad)
+    assert exc.value.extensions["code"] == "INVALID_INPUT"
+    assert exc.value.extensions["field"] == "email"
+
+
+@pytest.mark.asyncio
+async def test_create_user_trims_whitespace(mutation, mock_mongo_db):
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        user = await mutation.create_user(username="  spaced  ", email="  s@test.com  ")
+    assert user.username == "spaced"
+    assert user.email == "s@test.com"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad", ["", "   "])
+async def test_login_rejects_blank_username(mutation, bad):
+    with pytest.raises(GraphQLError) as exc:
+        await mutation.login(username=bad)
+    assert exc.value.extensions["code"] == "INVALID_INPUT"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad", ["", "   ", "\n"])
+async def test_create_pet_rejects_blank_name(mutation, bad):
+    with pytest.raises(GraphQLError) as exc:
+        await mutation.create_pet(user_id="507f1f77bcf86cd799439011", name=bad)
+    assert exc.value.extensions["code"] == "INVALID_INPUT"
+    assert exc.value.extensions["field"] == "name"
+
+
+@pytest.mark.asyncio
+async def test_create_pet_rejects_too_long_name(mutation):
+    with pytest.raises(GraphQLError) as exc:
+        await mutation.create_pet(user_id="507f1f77bcf86cd799439011", name="N" * 21)
+    assert exc.value.extensions["code"] == "INVALID_INPUT"
+
+
+@pytest.mark.asyncio
+async def test_create_pet_trims_name(mutation, mock_mongo_db):
+    with patch("app.graphql.mutations.mongo") as mock_mongo:
+        mock_mongo.db = mock_mongo_db
+        pet = await mutation.create_pet(user_id="507f1f77bcf86cd799439011", name="  Lyra  ")
+    assert pet.name == "Lyra"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad", ["", "   "])
+async def test_update_pet_rejects_blank_name(mutation, bad):
+    with pytest.raises(GraphQLError) as exc:
+        await mutation.update_pet(pet_id="507f1f77bcf86cd799439011", name=bad)
+    assert exc.value.extensions["code"] == "INVALID_INPUT"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad", ["", "   ", "\t"])
+async def test_add_log_entry_rejects_blank_text(mutation, bad):
+    with pytest.raises(GraphQLError) as exc:
+        await mutation.add_log_entry(user_id="507f1f77bcf86cd799439011", entry_text=bad)
+    assert exc.value.extensions["code"] == "INVALID_INPUT"
+    assert exc.value.extensions["field"] == "entryText"
+
+
+@pytest.mark.asyncio
+async def test_add_log_entry_rejects_too_long_text(mutation):
+    with pytest.raises(GraphQLError) as exc:
+        await mutation.add_log_entry(user_id="507f1f77bcf86cd799439011", entry_text="x" * 2001)
+    assert exc.value.extensions["code"] == "INVALID_INPUT"
