@@ -136,7 +136,12 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => switchMode(m)}
                   className={cn(
+                    // cursor-pointer + touch-manipulation: iOS standalone PWA'da Safari,
+                    // React'in kök seviyede delege ettiği click olayını cursor:pointer
+                    // olmayan butonlara güvenilmez iletir → sekme "tıklanmıyor" görünür.
+                    // Bu üçlü, dokunuşun handler'a ulaşmasını garantiler (tap gecikmesi + seçim engeli dahil).
                     "flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-[var(--duration-fast)]",
+                    "cursor-pointer touch-manipulation select-none",
                     mode === m
                       ? "bg-[var(--color-surface-elevated)] text-[var(--color-text-primary)] shadow-sm"
                       : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]",
