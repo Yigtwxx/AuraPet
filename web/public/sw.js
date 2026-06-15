@@ -7,7 +7,7 @@
  *   - GET dışı / GraphQL / API     → dokunulmaz (yalnızca network)
  * CACHE_VERSION değiştiğinde eski cache'ler temizlenir.
  */
-const CACHE_VERSION = "aurapet-v4"; // v4: yeni Aurion maskot ikonları
+const CACHE_VERSION = "aurapet-v5"; // v5: login sekme dokunuş düzeltmesi — yüklü PWA güncel asset'leri çeksin
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
